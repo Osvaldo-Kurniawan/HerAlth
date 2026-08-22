@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
-void main() {
+import 'core/di/service_locator.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ServiceLocator.instance.setup();
   runApp(const HerAlthApp());
 }
 
@@ -14,9 +18,7 @@ class HerAlthApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFE88A8A),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE88A8A)),
       ),
       home: const HomeScreen(),
     );
@@ -37,26 +39,16 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.favorite_rounded,
-              size: 64,
-              color: Color(0xFFE88A8A),
-            ),
+            Icon(Icons.favorite_rounded, size: 64, color: Color(0xFFE88A8A)),
             SizedBox(height: 16),
             Text(
               'HerAlth',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(
               'Start developing the app here.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),

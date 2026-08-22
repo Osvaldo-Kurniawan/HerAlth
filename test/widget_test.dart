@@ -2,7 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:heralth/main.dart';
 
 void main() {
-  testWidgets('Smoke test - App renders initial screen', (WidgetTester tester) async {
+  testWidgets('Smoke test - App renders initial screen', (
+    WidgetTester tester,
+  ) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const HerAlthApp());
 
