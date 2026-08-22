@@ -39,50 +39,50 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
       duration: const Duration(milliseconds: 500),
     );
 
-    // Group drift rotation (±1.5 degrees)
-    _groupRotation = Tween<double>(begin: -1.5 * math.pi / 180.0, end: 1.5 * math.pi / 180.0).animate(
+    // Group drift rotation (±4 degrees)
+    _groupRotation = Tween<double>(begin: -4.0 * math.pi / 180.0, end: 4.0 * math.pi / 180.0).animate(
       CurvedAnimation(
         parent: _idleController,
         curve: Curves.easeInOutSine,
       ),
     );
 
-    // Outer Ring: Y ±8px, scale 100-102%
-    _outerY = Tween<double>(begin: -8.0, end: 8.0).animate(
+    // Outer Ring: Y ±20px, scale 100-106%
+    _outerY = Tween<double>(begin: -20.0, end: 20.0).animate(
       CurvedAnimation(
         parent: _idleController,
         curve: const Interval(0.0, 1.0, curve: Curves.easeInOutSine),
       ),
     );
-    _outerScale = Tween<double>(begin: 1.0, end: 1.02).animate(
+    _outerScale = Tween<double>(begin: 1.0, end: 1.06).animate(
       CurvedAnimation(
         parent: _idleController,
         curve: const Interval(0.0, 1.0, curve: Curves.easeInOutSine),
       ),
     );
 
-    // Middle Ring: Y ±6px, X ±3px
-    _middleY = Tween<double>(begin: -6.0, end: 6.0).animate(
+    // Middle Ring: Y ±16px, X ±10px
+    _middleY = Tween<double>(begin: -16.0, end: 16.0).animate(
       CurvedAnimation(
         parent: _idleController,
         curve: const Interval(0.1, 0.9, curve: Curves.easeInOutSine),
       ),
     );
-    _middleX = Tween<double>(begin: -3.0, end: 3.0).animate(
+    _middleX = Tween<double>(begin: -10.0, end: 10.0).animate(
       CurvedAnimation(
         parent: _idleController,
         curve: const Interval(0.0, 0.8, curve: Curves.easeInOutSine),
       ),
     );
 
-    // Inner Ring: Y ±4px, scale 100-101.5%
-    _innerY = Tween<double>(begin: -4.0, end: 4.0).animate(
+    // Inner Ring: Y ±12px, scale 100-104%
+    _innerY = Tween<double>(begin: -12.0, end: 12.0).animate(
       CurvedAnimation(
         parent: _idleController,
         curve: const Interval(0.2, 0.8, curve: Curves.easeInOutSine),
       ),
     );
-    _innerScale = Tween<double>(begin: 1.0, end: 1.015).animate(
+    _innerScale = Tween<double>(begin: 1.0, end: 1.04).animate(
       CurvedAnimation(
         parent: _idleController,
         curve: const Interval(0.1, 0.9, curve: Curves.easeInOutSine),
@@ -300,8 +300,8 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: const Color(0xFFACC2F7).withValues(alpha: 0.35), // Very soft blue/periwinkle ring outline
-          width: 1.5,
+          color: const Color(0xFFACC2F7).withValues(alpha: 0.5), // Soft blue/periwinkle ring outline
+          width: 2.0,
         ),
       ),
     );
