@@ -84,32 +84,16 @@ class ReviewView extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Last period',
-                              style: TextStyle(fontSize: 14, color: Color(0xFF6E6E6E)),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              lastPeriodFormatted,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2C2C2C),
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          'Last period',
+                          style: TextStyle(fontSize: 14, color: Color(0xFF6E6E6E)),
                         ),
-                        TextButton(
-                          onPressed: () => viewModel.goToStep(2), // Step 2 is Last Period
-                          child: const Text(
-                            'Edit',
-                            style: TextStyle(
-                              color: Color(0xFF9E385A),
-                              fontWeight: FontWeight.bold,
-                            ),
+                        Text(
+                          lastPeriodFormatted,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C2C2C),
                           ),
                         ),
                       ],
@@ -151,6 +135,18 @@ class ReviewView extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                    const Divider(height: 24),
+                    // Edit Action
+                    TextButton(
+                      onPressed: () => viewModel.goToStep(2), // Step 2 is Last Period
+                      child: const Text(
+                        'Edit',
+                        style: TextStyle(
+                          color: Color(0xFF9E385A),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
