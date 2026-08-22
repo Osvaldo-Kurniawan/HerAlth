@@ -1,5 +1,7 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import '../view_models/onboarding_view_model.dart';
 
 class WelcomeView extends StatefulWidget {
@@ -11,7 +13,8 @@ class WelcomeView extends StatefulWidget {
   State<WelcomeView> createState() => _WelcomeViewState();
 }
 
-class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin {
+class _WelcomeViewState extends State<WelcomeView>
+    with TickerProviderStateMixin {
   late AnimationController _idleController;
   late AnimationController _interactionController;
 
@@ -40,12 +43,13 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
     );
 
     // Group drift rotation (±4 degrees)
-    _groupRotation = Tween<double>(begin: -4.0 * math.pi / 180.0, end: 4.0 * math.pi / 180.0).animate(
-      CurvedAnimation(
-        parent: _idleController,
-        curve: Curves.easeInOutSine,
-      ),
-    );
+    _groupRotation =
+        Tween<double>(
+          begin: -4.0 * math.pi / 180.0,
+          end: 4.0 * math.pi / 180.0,
+        ).animate(
+          CurvedAnimation(parent: _idleController, curve: Curves.easeInOutSine),
+        );
 
     // Outer Ring: Y ±20px, scale 100-106%
     _outerY = Tween<double>(begin: -20.0, end: 20.0).animate(
@@ -115,14 +119,19 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
             // Concentric Rings in the center background
             Positioned.fill(
               child: AnimatedBuilder(
-                animation: Listenable.merge([_idleController, _interactionController]),
+                animation: Listenable.merge([
+                  _idleController,
+                  _interactionController,
+                ]),
                 builder: (context, child) {
                   final interaction = _interactionController.value;
 
                   // Apply interaction offset to scales
-                  final currentOuterScale = _outerScale.value + (0.04 * interaction);
+                  final currentOuterScale =
+                      _outerScale.value + (0.04 * interaction);
                   final currentMiddleScale = 1.0 + (0.03 * interaction);
-                  final currentInnerScale = _innerScale.value + (0.02 * interaction);
+                  final currentInnerScale =
+                      _innerScale.value + (0.02 * interaction);
 
                   return Center(
                     child: Transform.rotate(
@@ -164,7 +173,10 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
 
             // Foreground Text & Layout
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -205,7 +217,10 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                   const Spacer(),
                   // Info Pill: No account needed. Everything stays on this device.
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFBEAEA),
                       borderRadius: BorderRadius.circular(20),
@@ -237,7 +252,9 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                   ElevatedButton(
                     onPressed: _handleSetUpCycle,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD6708A), // Vibrant rose pink
+                      backgroundColor: const Color(
+                        0xFFD6708A,
+                      ), // Vibrant rose pink
                       minimumSize: const Size.fromHeight(56),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(28),
@@ -255,7 +272,8 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: () => widget.viewModel.goToStep(7), // Restore Backup Step
+                    onPressed: () =>
+                        widget.viewModel.goToStep(7), // Restore Backup Step
                     style: OutlinedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFFDFC).withOpacity(0.4),
                       side: const BorderSide(color: Color(0xFFE8D5D5)),
@@ -278,10 +296,7 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                   // Footer Medical Warning
                   const Text(
                     'Not a medical device. For wellness insight only.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF8E8E8E),
-                    ),
+                    style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E)),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -300,7 +315,8 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: const Color(0xFFACC2F7).withValues(alpha: 0.5), // Soft blue/periwinkle ring outline
+          color: const Color(0xFFACC2F7)
+              .withValues(alpha: 0.5), // Soft blue/periwinkle ring outline
           width: 2.0,
         ),
       ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:heralth/domain/models/cycle.dart';
+import 'package:heralth/domain/repositories/cycle_repository.dart';
 import 'package:heralth/domain/models/user_profile.dart';
 import 'package:heralth/domain/repositories/user_profile_repository.dart';
 import 'package:heralth/ui/features/onboarding/view_models/onboarding_view_model.dart';
@@ -52,11 +54,47 @@ class FakeUserProfileRepository implements UserProfileRepository {
   }
 }
 
+class FakeCycleRepository implements CycleRepository {
+  final List<Cycle> cycles = [];
+  final List<CycleEntry> entries = [];
+
+  @override
+  Future<List<Cycle>> getCycles() async => cycles;
+
+  @override
+  Future<void> saveCycle(Cycle cycle) async {
+    cycles.removeWhere((c) => c.id == cycle.id);
+    cycles.add(cycle);
+  }
+
+  @override
+  Future<void> deleteCycle(String id) async {
+    cycles.removeWhere((c) => c.id == id);
+  }
+
+  @override
+  Future<List<CycleEntry>> getCycleEntries() async => entries;
+
+  @override
+  Future<void> saveCycleEntry(CycleEntry entry) async {
+    entries.removeWhere((e) => e.id == entry.id);
+    entries.add(entry);
+  }
+
+  @override
+  Future<void> deleteCycleEntry(String id) async {
+    entries.removeWhere((e) => e.id == id);
+  }
+}
+
 void main() {
-  testWidgets('Onboarding flow - Complete happy path', (WidgetTester tester) async {
+  testWidgets('Onboarding flow - Complete happy path', (
+    WidgetTester tester,
+  ) async {
     final fakeUserProfileRepo = FakeUserProfileRepository();
-    final viewModel = OnboardingViewModel(fakeUserProfileRepo);
-    
+    final fakeCycleRepo = FakeCycleRepository();
+    final viewModel = OnboardingViewModel(fakeUserProfileRepo, fakeCycleRepo);
+
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -64,19 +102,21 @@ void main() {
 
     bool isCompleted = false;
 
-    await tester.pumpWidget(MaterialApp(
-      home: OnboardingScreen(
-        viewModel: viewModel,
-        onComplete: () {
-          isCompleted = true;
-        },
+    await tester.pumpWidget(
+      MaterialApp(
+        home: OnboardingScreen(
+          viewModel: viewModel,
+          onComplete: () {
+            isCompleted = true;
+          },
+        ),
       ),
-    ));
+    );
 
     // 1. Welcome Screen
     expect(find.textContaining('Understand'), findsOneWidget);
     expect(find.text('Set up my cycle'), findsOneWidget);
-    
+
     // Move to Privacy Screen
     await tester.tap(find.text('Set up my cycle'));
     await tester.pumpAndSettle();
@@ -95,7 +135,7 @@ void main() {
     await tester.ensureVisible(checkbox);
     await tester.tap(checkbox);
     await tester.pumpAndSettle();
-    
+
     await tester.ensureVisible(continueBtn);
     await tester.tap(continueBtn);
     await tester.pumpAndSettle();
@@ -107,7 +147,7 @@ void main() {
     final day14 = find.text('14');
     await tester.tap(day14);
     await tester.pumpAndSettle();
-    
+
     final lastPeriodContinueBtn = find.text('Continue');
     await tester.ensureVisible(lastPeriodContinueBtn);
     await tester.tap(lastPeriodContinueBtn);
@@ -137,7 +177,7 @@ void main() {
     await tester.ensureVisible(goalOption);
     await tester.tap(goalOption);
     await tester.pumpAndSettle();
-    
+
     final finishSetupBtn = find.text('Finish setup');
     await tester.ensureVisible(finishSetupBtn);
     await tester.tap(finishSetupBtn);

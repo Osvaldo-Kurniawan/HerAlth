@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../view_models/onboarding_view_model.dart';
 
 class CycleLengthView extends StatefulWidget {
@@ -34,11 +35,11 @@ class _CycleLengthViewState extends State<CycleLengthView> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-    
+
     final offset = _scrollController.offset;
     final index = (offset / itemWidth).round();
     final value = (minDays + index).clamp(minDays, maxDays);
-    
+
     if (value != _currentValue) {
       setState(() {
         _currentValue = value;
@@ -56,7 +57,10 @@ class _CycleLengthViewState extends State<CycleLengthView> {
             _buildTopNavBar(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 8.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -72,10 +76,7 @@ class _CycleLengthViewState extends State<CycleLengthView> {
                     const SizedBox(height: 8),
                     const Text(
                       'Count from the first day of one period to the next.',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF6E6E6E),
-                      ),
+                      style: TextStyle(fontSize: 15, color: Color(0xFF6E6E6E)),
                     ),
                     const SizedBox(height: 48),
                     // Value Display
@@ -127,7 +128,9 @@ class _CycleLengthViewState extends State<CycleLengthView> {
                         label: const Text('Not sure? 28 days is average'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF9E385A),
-                          side: BorderSide(color: const Color(0xFF9E385A).withOpacity(0.3)),
+                          side: BorderSide(
+                            color: const Color(0xFF9E385A).withOpacity(0.3),
+                          ),
                           backgroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
@@ -141,11 +144,18 @@ class _CycleLengthViewState extends State<CycleLengthView> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.lock_outline_rounded, size: 16, color: Color(0xFF8E8E8E)),
+                          Icon(
+                            Icons.lock_outline_rounded,
+                            size: 16,
+                            color: Color(0xFF8E8E8E),
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Saved on this device only',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF8E8E8E),
+                            ),
                           ),
                         ],
                       ),
@@ -217,17 +227,11 @@ class _CycleLengthViewState extends State<CycleLengthView> {
             children: [
               Expanded(
                 flex: 2,
-                child: Container(
-                  height: 3,
-                  color: const Color(0xFF9E385A),
-                ),
+                child: Container(height: 3, color: const Color(0xFF9E385A)),
               ),
               Expanded(
                 flex: 2,
-                child: Container(
-                  height: 3,
-                  color: const Color(0xFFE5D9D9),
-                ),
+                child: Container(height: 3, color: const Color(0xFFE5D9D9)),
               ),
             ],
           ),
@@ -259,7 +263,7 @@ class _CycleLengthViewState extends State<CycleLengthView> {
               itemBuilder: (context, index) {
                 final day = minDays + index;
                 final isMajor = day % 5 == 0;
-                
+
                 return SizedBox(
                   width: itemWidth,
                   child: Column(
@@ -269,7 +273,9 @@ class _CycleLengthViewState extends State<CycleLengthView> {
                       Container(
                         width: 1.5,
                         height: isMajor ? 32 : 16,
-                        color: isMajor ? const Color(0xFF9E385A).withOpacity(0.5) : const Color(0xFF8E8E8E).withOpacity(0.3),
+                        color: isMajor
+                            ? const Color(0xFF9E385A).withOpacity(0.5)
+                            : const Color(0xFF8E8E8E).withOpacity(0.3),
                       ),
                       if (isMajor) ...[
                         const SizedBox(height: 8),
