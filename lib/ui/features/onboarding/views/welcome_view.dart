@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import '../view_models/onboarding_view_model.dart';
 
 class WelcomeView extends StatefulWidget {
@@ -13,32 +12,87 @@ class WelcomeView extends StatefulWidget {
 }
 
 class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin {
-  late Ticker _ticker;
-  double _elapsedSeconds = 0.0;
-
+  late AnimationController _idleController;
   late AnimationController _interactionController;
+
+  // Animations driven by the single master idle controller
+  late Animation<double> _groupRotation;
+  late Animation<double> _outerY;
+  late Animation<double> _outerScale;
+  late Animation<double> _middleY;
+  late Animation<double> _middleX;
+  late Animation<double> _innerY;
+  late Animation<double> _innerScale;
 
   @override
   void initState() {
     super.initState();
 
-    // Ticker fires every frame to calculate elapsed time for smooth organic movements
-    _ticker = createTicker((elapsed) {
-      setState(() {
-        _elapsedSeconds = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
-      });
-    });
-    _ticker.start();
+    // 6-second loop for the calm breathing/floating cycle
+    _idleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat(reverse: true);
 
     _interactionController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 500),
+    );
+
+    // Group drift rotation (±1.5 degrees)
+    _groupRotation = Tween<double>(begin: -1.5 * math.pi / 180.0, end: 1.5 * math.pi / 180.0).animate(
+      CurvedAnimation(
+        parent: _idleController,
+        curve: Curves.easeInOutSine,
+      ),
+    );
+
+    // Outer Ring: Y ±8px, scale 100-102%
+    _outerY = Tween<double>(begin: -8.0, end: 8.0).animate(
+      CurvedAnimation(
+        parent: _idleController,
+        curve: const Interval(0.0, 1.0, curve: Curves.easeInOutSine),
+      ),
+    );
+    _outerScale = Tween<double>(begin: 1.0, end: 1.02).animate(
+      CurvedAnimation(
+        parent: _idleController,
+        curve: const Interval(0.0, 1.0, curve: Curves.easeInOutSine),
+      ),
+    );
+
+    // Middle Ring: Y ±6px, X ±3px
+    _middleY = Tween<double>(begin: -6.0, end: 6.0).animate(
+      CurvedAnimation(
+        parent: _idleController,
+        curve: const Interval(0.1, 0.9, curve: Curves.easeInOutSine),
+      ),
+    );
+    _middleX = Tween<double>(begin: -3.0, end: 3.0).animate(
+      CurvedAnimation(
+        parent: _idleController,
+        curve: const Interval(0.0, 0.8, curve: Curves.easeInOutSine),
+      ),
+    );
+
+    // Inner Ring: Y ±4px, scale 100-101.5%
+    _innerY = Tween<double>(begin: -4.0, end: 4.0).animate(
+      CurvedAnimation(
+        parent: _idleController,
+        curve: const Interval(0.2, 0.8, curve: Curves.easeInOutSine),
+      ),
+    );
+    _innerScale = Tween<double>(begin: 1.0, end: 1.015).animate(
+      CurvedAnimation(
+        parent: _idleController,
+        curve: const Interval(0.1, 0.9, curve: Curves.easeInOutSine),
+      ),
     );
   }
 
   @override
   void dispose() {
-    _ticker.dispose();
+    _idleController.dispose();
     _interactionController.dispose();
     super.dispose();
   }
@@ -61,54 +115,42 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
             // Concentric Rings in the center background
             Positioned.fill(
               child: AnimatedBuilder(
-                animation: _interactionController,
+                animation: Listenable.merge([_idleController, _interactionController]),
                 builder: (context, child) {
-                  final time = _elapsedSeconds;
                   final interaction = _interactionController.value;
 
-                  // 1. Group drift rotation (±1.5 degrees drift over 9s cycle)
-                  final groupRotation = (1.5 * math.pi / 180.0) * math.sin(2.0 * math.pi * time / 9.0);
-
-                  // 2. Outer Ring: Y ±8px, scale 100-102% over 6s cycle, interaction +4% scale
-                  final outerY = 8.0 * math.sin(2.0 * math.pi * time / 6.0);
-                  final outerScale = 1.0 + 0.01 + 0.01 * math.sin(2.0 * math.pi * time / 6.0) + (0.04 * interaction);
-
-                  // 3. Middle Ring: Y ±6px, X ±3px over 5s cycle, interaction +3% scale
-                  final middleY = 6.0 * math.sin(2.0 * math.pi * time / 5.0);
-                  final middleX = 3.0 * math.cos(2.0 * math.pi * time / 5.0);
-                  final middleScale = 1.0 + (0.03 * interaction);
-
-                  // 4. Inner Ring: Y ±4px, scale 100-101.5% over 4s cycle, interaction +2% scale
-                  final innerY = 4.0 * math.sin(2.0 * math.pi * time / 4.0);
-                  final innerScale = 1.0 + 0.0075 + 0.0075 * math.sin(2.0 * math.pi * time / 4.0) + (0.02 * interaction);
+                  // Apply interaction offset to scales
+                  final currentOuterScale = _outerScale.value + (0.04 * interaction);
+                  final currentMiddleScale = 1.0 + (0.03 * interaction);
+                  final currentInnerScale = _innerScale.value + (0.02 * interaction);
 
                   return Center(
                     child: Transform.rotate(
-                      angle: groupRotation,
+                      angle: _groupRotation.value,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
                           // Outer Ring
                           Transform.translate(
-                            offset: Offset(0, outerY),
+                            offset: Offset(0, _outerY.value),
                             child: Transform.scale(
-                              scale: outerScale,
+                              scale: currentOuterScale,
                               child: _buildRing(size: 320),
                             ),
                           ),
                           // Middle Ring
                           Transform.translate(
-                            offset: Offset(middleX, middleY),
+                            offset: Offset(_middleX.value, _middleY.value),
                             child: Transform.scale(
-                              scale: middleScale,
+                              scale: currentMiddleScale,
                               child: _buildRing(size: 230),
                             ),
                           ),
                           // Inner Ring
                           Transform.translate(
-                            offset: Offset(0, innerY),
+                            offset: Offset(0, _innerY.value),
                             child: Transform.scale(
-                              scale: innerScale,
+                              scale: currentInnerScale,
                               child: _buildRing(size: 140),
                             ),
                           ),
