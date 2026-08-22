@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../view_models/onboarding_view_model.dart';
 
@@ -10,127 +11,250 @@ class WelcomeView extends StatefulWidget {
   State<WelcomeView> createState() => _WelcomeViewState();
 }
 
-class _WelcomeViewState extends State<WelcomeView> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin {
+  late AnimationController _masterController;
+  late AnimationController _interactionController;
 
   @override
   void initState() {
     super.initState();
-    // Smooth, slow 6-second breathing loop
-    _controller = AnimationController(
+    // Master controller loops every 120s (LCM of 4s, 5s, 6s, 8s, 10s cycles)
+    _masterController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 6),
-    )..repeat(reverse: true);
+      duration: const Duration(seconds: 120),
+    )..repeat();
+
+    _interactionController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _masterController.dispose();
+    _interactionController.dispose();
     super.dispose();
+  }
+
+  void _handleSetUpCycle() {
+    // Trigger the ripple expansion interaction
+    _interactionController.forward().then((_) {
+      _interactionController.reverse().then((_) {
+        widget.viewModel.nextStep();
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFFCF5F5),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              // Animated Circular element
-              AnimatedBuilder(
-                animation: _controller,
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF6F6), // Match soft pink background
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Concentric Rings in the center background
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_masterController, _interactionController]),
                 builder: (context, child) {
-                  return Transform.rotate(
-                    angle: _controller.value * 2.0 * 3.14159,
-                    child: Transform.scale(
-                      scale: 1.0 + (_controller.value * 0.05), // Subtle scale (breathing 5%)
-                      child: Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              const Color(0xFFE88A8A).withOpacity(0.4),
-                              const Color(0xFF9E385A).withOpacity(0.1),
-                            ],
+                  final time = _masterController.value * 120.0; // elapsed seconds
+                  final interaction = _interactionController.value;
+
+                  // 1. Group drift rotation (8-10s average cycle: 9s)
+                  final groupRotation = (1.5 * math.pi / 180.0) * math.sin(2.0 * math.pi * time / 9.0);
+
+                  // 2. Outer Ring: Y ±8px, scale 100-102%, interaction +4% scale
+                  final outerY = 8.0 * math.sin(2.0 * math.pi * time / 6.0);
+                  final outerScale = 1.0 + 0.01 + 0.01 * math.sin(2.0 * math.pi * time / 6.0) + (0.04 * interaction);
+
+                  // 3. Middle Ring: Y ±6px, X ±3px, interaction +3% scale
+                  final middleY = 6.0 * math.sin(2.0 * math.pi * time / 5.0);
+                  final middleX = 3.0 * math.cos(2.0 * math.pi * time / 5.0);
+                  final middleScale = 1.0 + (0.03 * interaction);
+
+                  // 4. Inner Ring: Y ±4px, scale 100-101.5%, interaction +2% scale
+                  final innerY = 4.0 * math.sin(2.0 * math.pi * time / 4.0);
+                  final innerScale = 1.0 + 0.0075 + 0.0075 * math.sin(2.0 * math.pi * time / 4.0) + (0.02 * interaction);
+
+                  return Center(
+                    child: Transform.rotate(
+                      angle: groupRotation,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Outer Ring
+                          Transform.translate(
+                            offset: Offset(0, outerY),
+                            child: Transform.scale(
+                              scale: outerScale,
+                              child: _buildRing(size: 320),
+                            ),
                           ),
-                          border: Border.all(
-                            color: const Color(0xFF9E385A).withOpacity(0.3),
-                            width: 2.0,
+                          // Middle Ring
+                          Transform.translate(
+                            offset: Offset(middleX, middleY),
+                            child: Transform.scale(
+                              scale: middleScale,
+                              child: _buildRing(size: 230),
+                            ),
                           ),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.favorite_rounded,
-                            size: 64,
-                            color: Color(0xFF9E385A),
+                          // Inner Ring
+                          Transform.translate(
+                            offset: Offset(0, innerY),
+                            child: Transform.scale(
+                              scale: innerScale,
+                              child: _buildRing(size: 140),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   );
                 },
               ),
-              const SizedBox(height: 48),
-              const Text(
-                'HerAlth',
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2E2E2E),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Your calm, secure, and private local-first cycle and symptom tracker.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF6E6E6E),
-                  height: 1.4,
-                ),
-              ),
-              const Spacer(),
-              // CTA Buttons
-              ElevatedButton(
-                onPressed: () => widget.viewModel.nextStep(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9E385A),
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
+            ),
+
+            // Foreground Text & Layout
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 24),
+                  // Moon Icon Outline (Pink/Red)
+                  const Icon(
+                    Icons.nightlight_round_outlined,
+                    size: 36,
+                    color: Color(0xFFD6708A),
                   ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Get Started',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  const Spacer(),
+                  // Headline (Serif style matching mock)
+                  const Text(
+                    'Understand\nyour body,\nmonth by\nmonth.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'serif',
+                      height: 1.15,
+                      color: Color(0xFF2C2C2C),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => widget.viewModel.goToStep(7), // Step 7 is Restore Backup
-                child: const Text(
-                  'Restore from Backup',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF9E385A),
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 20),
+                  // Subtitle
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      'A private, intuitive space to track your cycle and uncover insights about your overall health.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Color(0xFF6E6E6E),
+                        height: 1.4,
+                      ),
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  // Info Pill: No account needed. Everything stays on this device.
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFBEAEA),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 16,
+                          color: Color(0xFF2C2C2C),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'No account needed. Everything stays on this device.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2C2C2C),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Buttons
+                  ElevatedButton(
+                    onPressed: _handleSetUpCycle,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD6708A), // Vibrant rose pink
+                      minimumSize: const Size.fromHeight(56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Set up my cycle',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: () => widget.viewModel.goToStep(7), // Restore Backup Step
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFFDFC).withOpacity(0.4),
+                      side: const BorderSide(color: Color(0xFFE8D5D5)),
+                      minimumSize: const Size.fromHeight(56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Restore from a backup file',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF2C2C2C),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Footer Medical Warning
+                  const Text(
+                    'Not a medical device. For wellness insight only.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF8E8E8E),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRing({required double size}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: const Color(0xFFACC2F7).withValues(alpha: 0.35), // Very soft blue/periwinkle ring outline
+          width: 1.5,
         ),
       ),
     );

@@ -74,11 +74,11 @@ void main() {
     ));
 
     // 1. Welcome Screen
-    expect(find.text('HerAlth'), findsWidgets);
-    expect(find.text('Get Started'), findsOneWidget);
+    expect(find.textContaining('Understand'), findsOneWidget);
+    expect(find.text('Set up my cycle'), findsOneWidget);
     
     // Move to Privacy Screen
-    await tester.tap(find.text('Get Started'));
+    await tester.tap(find.text('Set up my cycle'));
     await tester.pumpAndSettle();
 
     // 2. Privacy Screen
