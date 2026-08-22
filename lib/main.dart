@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'core/di/service_locator.dart';
+import 'ui/features/onboarding/view_models/onboarding_view_model.dart';
+import 'ui/features/onboarding/views/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -8,8 +9,36 @@ void main() async {
   runApp(const HerAlthApp());
 }
 
-class HerAlthApp extends StatelessWidget {
+class HerAlthApp extends StatefulWidget {
   const HerAlthApp({super.key});
+
+  @override
+  State<HerAlthApp> createState() => _HerAlthAppState();
+}
+
+class _HerAlthAppState extends State<HerAlthApp> {
+  bool _isOnboarded = false;
+  bool _isChecking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkOnboardingStatus();
+  }
+
+  Future<void> _checkOnboardingStatus() async {
+    final profile = await ServiceLocator.instance.userProfileRepository.getUserProfile();
+    setState(() {
+      _isOnboarded = profile != null;
+      _isChecking = false;
+    });
+  }
+
+  void _onOnboardingComplete() {
+    setState(() {
+      _isOnboarded = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +47,20 @@ class HerAlthApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE88A8A)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFE88A8A),
+        ),
       ),
-      home: const HomeScreen(),
+      home: _isChecking
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : _isOnboarded
+              ? const HomeScreen()
+              : OnboardingScreen(
+                  viewModel: OnboardingViewModel(
+                    ServiceLocator.instance.userProfileRepository,
+                  ),
+                  onComplete: _onOnboardingComplete,
+                ),
     );
   }
 }
