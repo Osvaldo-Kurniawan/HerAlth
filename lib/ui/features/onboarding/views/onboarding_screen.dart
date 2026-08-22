@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../view_models/onboarding_view_model.dart';
 import 'welcome_view.dart';
 import 'privacy_view.dart';
@@ -63,7 +64,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           CycleLengthView(viewModel: widget.viewModel), // Index 3
           PeriodDurationView(viewModel: widget.viewModel), // Index 4
           GoalView(viewModel: widget.viewModel), // Index 5
-          ReviewView(viewModel: widget.viewModel, onComplete: widget.onComplete), // Index 6
+          ReviewView(
+            viewModel: widget.viewModel,
+            onComplete: widget.onComplete,
+          ), // Index 6
           RestoreBackupView(
             viewModel: widget.viewModel,
             onRestoreSuccess: widget.onComplete,

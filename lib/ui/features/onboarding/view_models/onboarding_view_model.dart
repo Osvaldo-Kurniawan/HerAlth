@@ -1,13 +1,18 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
+
 import '../../../../domain/models/backup.dart';
 import '../../../../domain/models/user_profile.dart';
+import '../../../../domain/models/cycle.dart';
+import '../../../../domain/repositories/cycle_repository.dart';
 import '../../../../domain/repositories/user_profile_repository.dart';
 
 class OnboardingViewModel extends ChangeNotifier {
   final UserProfileRepository _userProfileRepository;
+  final CycleRepository _cycleRepository;
 
-  OnboardingViewModel(this._userProfileRepository);
+  OnboardingViewModel(this._userProfileRepository, this._cycleRepository);
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -82,7 +87,7 @@ class OnboardingViewModel extends ChangeNotifier {
         notifyListeners();
         return false;
       }
-      
+
       // We can use the backup repository implementation to restore
       // Let's write a method in BackupRepository or perform direct restore
       // Since our BackupRepositoryImpl.restoreBackup takes sourceFilePath,
@@ -93,10 +98,14 @@ class OnboardingViewModel extends ChangeNotifier {
         await _userProfileRepository.saveUserProfile(backupData.userProfile!);
       }
       if (backupData.cycleSettings != null) {
-        await _userProfileRepository.saveCycleSettings(backupData.cycleSettings!);
+        await _userProfileRepository.saveCycleSettings(
+          backupData.cycleSettings!,
+        );
       }
       if (backupData.reminderSettings != null) {
-        await _userProfileRepository.saveReminderSettings(backupData.reminderSettings!);
+        await _userProfileRepository.saveReminderSettings(
+          backupData.reminderSettings!,
+        );
       }
       if (backupData.aiSettings != null) {
         await _userProfileRepository.saveAiSettings(backupData.aiSettings!);
@@ -143,6 +152,15 @@ class OnboardingViewModel extends ChangeNotifier {
       await _userProfileRepository.saveCycleSettings(settings);
       await _userProfileRepository.saveReminderSettings(reminders);
       await _userProfileRepository.saveAiSettings(ai);
+
+      if (_lastPeriodDate != null) {
+        final newCycle = Cycle(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          startDate: _lastPeriodDate!,
+          flowIntensity: 'Medium',
+        );
+        await _cycleRepository.saveCycle(newCycle);
+      }
     } finally {
       _isLoading = false;
       notifyListeners();

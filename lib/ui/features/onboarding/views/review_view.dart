@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../view_models/onboarding_view_model.dart';
 
 class ReviewView extends StatelessWidget {
@@ -33,10 +34,7 @@ class ReviewView extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFE88A8A).withOpacity(0.2),
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFE88A8A),
-                    width: 2,
-                  ),
+                  border: Border.all(color: const Color(0xFFE88A8A), width: 2),
                 ),
                 child: const Icon(
                   Icons.check_rounded,
@@ -86,14 +84,20 @@ class ReviewView extends StatelessWidget {
                       children: [
                         const Text(
                           'Last period',
-                          style: TextStyle(fontSize: 14, color: Color(0xFF6E6E6E)),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF6E6E6E),
+                          ),
                         ),
-                        Text(
-                          lastPeriodFormatted,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C2C2C),
+                        Expanded(
+                          child: Text(
+                            lastPeriodFormatted,
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C2C2C),
+                            ),
                           ),
                         ),
                       ],
@@ -105,14 +109,20 @@ class ReviewView extends StatelessWidget {
                       children: [
                         const Text(
                           'Cycle length',
-                          style: TextStyle(fontSize: 14, color: Color(0xFF6E6E6E)),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF6E6E6E),
+                          ),
                         ),
-                        Text(
-                          '${viewModel.cycleLength} days',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C2C2C),
+                        Expanded(
+                          child: Text(
+                            '${viewModel.cycleLength} days',
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C2C2C),
+                            ),
                           ),
                         ),
                       ],
@@ -124,14 +134,20 @@ class ReviewView extends StatelessWidget {
                       children: [
                         const Text(
                           'Period length',
-                          style: TextStyle(fontSize: 14, color: Color(0xFF6E6E6E)),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF6E6E6E),
+                          ),
                         ),
-                        Text(
-                          '${viewModel.periodDuration} days',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C2C2C),
+                        Expanded(
+                          child: Text(
+                            '${viewModel.periodDuration} days',
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C2C2C),
+                            ),
                           ),
                         ),
                       ],
@@ -139,7 +155,8 @@ class ReviewView extends StatelessWidget {
                     const Divider(height: 24),
                     // Edit Action
                     TextButton(
-                      onPressed: () => viewModel.goToStep(2), // Step 2 is Last Period
+                      onPressed: () =>
+                          viewModel.goToStep(2), // Step 2 is Last Period
                       child: const Text(
                         'Edit',
                         style: TextStyle(
@@ -154,7 +171,10 @@ class ReviewView extends StatelessWidget {
               const SizedBox(height: 24),
               // Security note banner
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF9E385A).withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
@@ -213,8 +233,18 @@ class ReviewView extends StatelessWidget {
 
   String _getMonthAbbreviation(int month) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return months[month - 1];
   }

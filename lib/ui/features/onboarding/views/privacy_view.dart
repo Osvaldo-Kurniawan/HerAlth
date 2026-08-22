@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../view_models/onboarding_view_model.dart';
 
 class PrivacyView extends StatefulWidget {
@@ -136,7 +137,9 @@ class _PrivacyViewState extends State<PrivacyView> {
               const SizedBox(height: 24),
               // Button
               ElevatedButton(
-                onPressed: _isChecked ? () => widget.viewModel.nextStep() : null,
+                onPressed: _isChecked
+                    ? () => widget.viewModel.nextStep()
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9E385A),
                   disabledBackgroundColor: const Color(0xFFE5D9D9),
@@ -190,11 +193,7 @@ class _PrivacyViewState extends State<PrivacyView> {
               color: const Color(0xFFE88A8A).withOpacity(0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF9E385A),
-              size: 24,
-            ),
+            child: Icon(icon, color: const Color(0xFF9E385A), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(

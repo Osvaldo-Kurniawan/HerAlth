@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../view_models/onboarding_view_model.dart';
 
 class RestoreBackupView extends StatefulWidget {
@@ -66,7 +67,8 @@ class _RestoreBackupViewState extends State<RestoreBackupView> {
               // Back Navigation Arrow
               IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                onPressed: () => widget.viewModel.goToStep(0), // Welcome screen is step 0
+                onPressed: () =>
+                    widget.viewModel.goToStep(0), // Welcome screen is step 0
               ),
               const SizedBox(height: 16),
               const Text(
@@ -100,17 +102,19 @@ class _RestoreBackupViewState extends State<RestoreBackupView> {
                     filled: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: const Color(0xFF9E385A).withOpacity(0.15)),
+                      borderSide: BorderSide(
+                        color: const Color(0xFF9E385A).withOpacity(0.15),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFF9E385A), width: 1.5),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF9E385A),
+                        width: 1.5,
+                      ),
                     ),
                   ),
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
                 ),
               ),
               const SizedBox(height: 16),
@@ -135,9 +139,7 @@ class _RestoreBackupViewState extends State<RestoreBackupView> {
                     },
                     icon: const Icon(Icons.clear_all_rounded, size: 18),
                     label: const Text('Clear'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey,
-                    ),
+                    style: TextButton.styleFrom(foregroundColor: Colors.grey),
                   ),
                 ],
               ),
@@ -155,8 +157,11 @@ class _RestoreBackupViewState extends State<RestoreBackupView> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: widget.viewModel.restoreStatusMessage!.startsWith('Error') ||
-                                    widget.viewModel.restoreStatusMessage!.startsWith('Invalid')
+                            color:
+                                widget.viewModel.restoreStatusMessage!
+                                        .startsWith('Error') ||
+                                    widget.viewModel.restoreStatusMessage!
+                                        .startsWith('Invalid')
                                 ? Colors.redAccent
                                 : Colors.green,
                           ),
@@ -196,7 +201,8 @@ class _RestoreBackupViewState extends State<RestoreBackupView> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        final success = await widget.viewModel.restoreFromBackupString(_jsonController.text);
+                        final success = await widget.viewModel
+                            .restoreFromBackupString(_jsonController.text);
                         if (success) {
                           widget.onRestoreSuccess();
                         }

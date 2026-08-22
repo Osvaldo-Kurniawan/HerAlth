@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../view_models/onboarding_view_model.dart';
 
 class GoalView extends StatefulWidget {
@@ -31,7 +32,10 @@ class _GoalViewState extends State<GoalView> {
             _buildTopNavBar(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 8.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -47,10 +51,7 @@ class _GoalViewState extends State<GoalView> {
                     const SizedBox(height: 8),
                     const Text(
                       'This shapes your insights. Pick one.',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF6E6E6E),
-                      ),
+                      style: TextStyle(fontSize: 15, color: Color(0xFF6E6E6E)),
                     ),
                     const SizedBox(height: 24),
                     // Goal Option Cards
@@ -83,11 +84,18 @@ class _GoalViewState extends State<GoalView> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.lock_outline_rounded, size: 16, color: Color(0xFF8E8E8E)),
+                          Icon(
+                            Icons.lock_outline_rounded,
+                            size: 16,
+                            color: Color(0xFF8E8E8E),
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Saved on this device only',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF8E8E8E),
+                            ),
                           ),
                         ],
                       ),
@@ -98,7 +106,8 @@ class _GoalViewState extends State<GoalView> {
                       onPressed: _selectedGoal != null
                           ? () {
                               widget.viewModel.setGoal(_selectedGoal!);
-                              widget.viewModel.nextStep(); // Goes to Review (Step 6)
+                              widget.viewModel
+                                  .nextStep(); // Goes to Review (Step 6)
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
@@ -115,7 +124,9 @@ class _GoalViewState extends State<GoalView> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: _selectedGoal != null ? Colors.white : const Color(0xFF8E8E8E),
+                          color: _selectedGoal != null
+                              ? Colors.white
+                              : const Color(0xFF8E8E8E),
                         ),
                       ),
                     ),
@@ -158,10 +169,7 @@ class _GoalViewState extends State<GoalView> {
         // Progress bar (100%)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Container(
-            height: 3,
-            color: const Color(0xFF9E385A),
-          ),
+          child: Container(height: 3, color: const Color(0xFF9E385A)),
         ),
       ],
     );
@@ -205,11 +213,7 @@ class _GoalViewState extends State<GoalView> {
                 color: const Color(0xFFE88A8A).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: const Color(0xFF9E385A),
-                size: 24,
-              ),
+              child: Icon(icon, color: const Color(0xFF9E385A), size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(

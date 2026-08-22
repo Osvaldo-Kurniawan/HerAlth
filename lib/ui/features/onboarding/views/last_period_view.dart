@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../view_models/onboarding_view_model.dart';
 
 class LastPeriodView extends StatefulWidget {
@@ -11,7 +12,10 @@ class LastPeriodView extends StatefulWidget {
 }
 
 class _LastPeriodViewState extends State<LastPeriodView> {
-  DateTime _currentMonth = DateTime(2026, 4); // Starting default month matching the mockup image (April 2026)
+  DateTime _currentMonth = DateTime(
+    2026,
+    4,
+  ); // Starting default month matching the mockup image (April 2026)
   DateTime? _selectedDate;
 
   @override
@@ -46,7 +50,10 @@ class _LastPeriodViewState extends State<LastPeriodView> {
             _buildTopNavBar(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 8.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -62,10 +69,7 @@ class _LastPeriodViewState extends State<LastPeriodView> {
                     const SizedBox(height: 8),
                     const Text(
                       'This anchors every prediction HerAlth makes.',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF6E6E6E),
-                      ),
+                      style: TextStyle(fontSize: 15, color: Color(0xFF6E6E6E)),
                     ),
                     const SizedBox(height: 24),
                     // Calendar Container Card
@@ -87,11 +91,18 @@ class _LastPeriodViewState extends State<LastPeriodView> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.lock_outline_rounded, size: 16, color: Color(0xFF8E8E8E)),
+                          Icon(
+                            Icons.lock_outline_rounded,
+                            size: 16,
+                            color: Color(0xFF8E8E8E),
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Saved on this device only',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF8E8E8E),
+                            ),
                           ),
                         ],
                       ),
@@ -119,7 +130,9 @@ class _LastPeriodViewState extends State<LastPeriodView> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: _selectedDate != null ? Colors.white : const Color(0xFF8E8E8E),
+                          color: _selectedDate != null
+                              ? Colors.white
+                              : const Color(0xFF8E8E8E),
                         ),
                       ),
                     ),
@@ -170,16 +183,15 @@ class _LastPeriodViewState extends State<LastPeriodView> {
                   height: 3,
                   decoration: const BoxDecoration(
                     color: Color(0xFF9E385A),
-                    borderRadius: BorderRadius.horizontal(left: Radius.circular(2)),
+                    borderRadius: BorderRadius.horizontal(
+                      left: Radius.circular(2),
+                    ),
                   ),
                 ),
               ),
               Expanded(
                 flex: 3,
-                child: Container(
-                  height: 3,
-                  color: const Color(0xFFE5D9D9),
-                ),
+                child: Container(height: 3, color: const Color(0xFFE5D9D9)),
               ),
             ],
           ),
@@ -189,8 +201,13 @@ class _LastPeriodViewState extends State<LastPeriodView> {
   }
 
   Widget _buildCalendarCard() {
-    final daysInMonth = _getDaysInMonth(_currentMonth.year, _currentMonth.month);
-    final firstWeekday = DateTime(_currentMonth.year, _currentMonth.month, 1).weekday % 7; // Sunday is 0
+    final daysInMonth = _getDaysInMonth(
+      _currentMonth.year,
+      _currentMonth.month,
+    );
+    final firstWeekday =
+        DateTime(_currentMonth.year, _currentMonth.month, 1).weekday %
+        7; // Sunday is 0
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -259,9 +276,14 @@ class _LastPeriodViewState extends State<LastPeriodView> {
               if (dayIndex <= 0 || dayIndex > daysInMonth) {
                 return const SizedBox.shrink();
               }
-              
-              final dayDate = DateTime(_currentMonth.year, _currentMonth.month, dayIndex);
-              final isSelected = _selectedDate != null &&
+
+              final dayDate = DateTime(
+                _currentMonth.year,
+                _currentMonth.month,
+                dayIndex,
+              );
+              final isSelected =
+                  _selectedDate != null &&
                   _selectedDate!.year == dayDate.year &&
                   _selectedDate!.month == dayDate.month &&
                   _selectedDate!.day == dayDate.day;
@@ -276,15 +298,21 @@ class _LastPeriodViewState extends State<LastPeriodView> {
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF9E385A) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFF9E385A)
+                        : Colors.transparent,
                     shape: BoxShape.circle,
                   ),
                   child: Text(
                     '$dayIndex',
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? Colors.white : const Color(0xFF2C2C2C),
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF2C2C2C),
                     ),
                   ),
                 ),
@@ -302,8 +330,18 @@ class _LastPeriodViewState extends State<LastPeriodView> {
 
   String _getMonthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
