@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import '../view_models/onboarding_view_model.dart';
 
 class WelcomeView extends StatefulWidget {
@@ -12,17 +13,22 @@ class WelcomeView extends StatefulWidget {
 }
 
 class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin {
-  late AnimationController _masterController;
+  late Ticker _ticker;
+  double _elapsedSeconds = 0.0;
+
   late AnimationController _interactionController;
 
   @override
   void initState() {
     super.initState();
-    // Master controller loops every 120s (LCM of 4s, 5s, 6s, 8s, 10s cycles)
-    _masterController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 120),
-    )..repeat();
+
+    // Ticker fires every frame to calculate elapsed time for smooth organic movements
+    _ticker = createTicker((elapsed) {
+      setState(() {
+        _elapsedSeconds = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
+      });
+    });
+    _ticker.start();
 
     _interactionController = AnimationController(
       vsync: this,
@@ -32,13 +38,12 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
 
   @override
   void dispose() {
-    _masterController.dispose();
+    _ticker.dispose();
     _interactionController.dispose();
     super.dispose();
   }
 
   void _handleSetUpCycle() {
-    // Trigger the ripple expansion interaction
     _interactionController.forward().then((_) {
       _interactionController.reverse().then((_) {
         widget.viewModel.nextStep();
@@ -49,31 +54,31 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF6F6), // Match soft pink background
+      backgroundColor: const Color(0xFFFFF6F6),
       body: SafeArea(
         child: Stack(
           children: [
             // Concentric Rings in the center background
             Positioned.fill(
               child: AnimatedBuilder(
-                animation: Listenable.merge([_masterController, _interactionController]),
+                animation: _interactionController,
                 builder: (context, child) {
-                  final time = _masterController.value * 120.0; // elapsed seconds
+                  final time = _elapsedSeconds;
                   final interaction = _interactionController.value;
 
-                  // 1. Group drift rotation (8-10s average cycle: 9s)
+                  // 1. Group drift rotation (±1.5 degrees drift over 9s cycle)
                   final groupRotation = (1.5 * math.pi / 180.0) * math.sin(2.0 * math.pi * time / 9.0);
 
-                  // 2. Outer Ring: Y ±8px, scale 100-102%, interaction +4% scale
+                  // 2. Outer Ring: Y ±8px, scale 100-102% over 6s cycle, interaction +4% scale
                   final outerY = 8.0 * math.sin(2.0 * math.pi * time / 6.0);
                   final outerScale = 1.0 + 0.01 + 0.01 * math.sin(2.0 * math.pi * time / 6.0) + (0.04 * interaction);
 
-                  // 3. Middle Ring: Y ±6px, X ±3px, interaction +3% scale
+                  // 3. Middle Ring: Y ±6px, X ±3px over 5s cycle, interaction +3% scale
                   final middleY = 6.0 * math.sin(2.0 * math.pi * time / 5.0);
                   final middleX = 3.0 * math.cos(2.0 * math.pi * time / 5.0);
                   final middleScale = 1.0 + (0.03 * interaction);
 
-                  // 4. Inner Ring: Y ±4px, scale 100-101.5%, interaction +2% scale
+                  // 4. Inner Ring: Y ±4px, scale 100-101.5% over 4s cycle, interaction +2% scale
                   final innerY = 4.0 * math.sin(2.0 * math.pi * time / 4.0);
                   final innerScale = 1.0 + 0.0075 + 0.0075 * math.sin(2.0 * math.pi * time / 4.0) + (0.02 * interaction);
 
