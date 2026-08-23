@@ -12,19 +12,14 @@ class LastPeriodView extends StatefulWidget {
 }
 
 class _LastPeriodViewState extends State<LastPeriodView> {
-  DateTime _currentMonth = DateTime(
-    2026,
-    4,
-  ); // Starting default month matching the mockup image (April 2026)
+  late DateTime _currentMonth;
   DateTime? _selectedDate;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.viewModel.lastPeriodDate;
-    if (_selectedDate != null) {
-      _currentMonth = DateTime(_selectedDate!.year, _selectedDate!.month);
-    }
+    _selectedDate = widget.viewModel.lastPeriodDate ?? DateTime.now();
+    _currentMonth = DateTime(_selectedDate!.year, _selectedDate!.month);
   }
 
   void _nextMonth() {

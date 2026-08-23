@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../../domain/models/backup.dart';
 
 abstract class BackupService {
@@ -8,21 +9,12 @@ abstract class BackupService {
 class BackupServiceImpl implements BackupService {
   @override
   Future<String> exportBackup(BackupData data) async {
-    // Serialization skeleton: Converts BackupData to JSON string
-    // In future, this can write to a file or encrypt the string.
-    return '';
+    return json.encode(data.toJson());
   }
 
   @override
   Future<BackupData> importBackup(String backupJson) async {
-    // Deserialization skeleton: Converts JSON string back to BackupData
-    return BackupData(
-      cycles: [],
-      cycleEntries: [],
-      checkUps: [],
-      analysisResults: [],
-      reports: [],
-      exportedAt: DateTime.now(),
-    );
+    final Map<String, dynamic> data = json.decode(backupJson) as Map<String, dynamic>;
+    return BackupData.fromJson(data);
   }
 }

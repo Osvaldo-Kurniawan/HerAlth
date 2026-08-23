@@ -95,6 +95,7 @@ class _ReadsScreenState extends State<ReadsScreen> {
                   final profileVM = ProfileViewModel(
                     di.userProfileRepository,
                     di.backupRepository,
+                    di.cycleRepository,
                   );
                   profileVM.loadProfileData();
                   Navigator.push(
