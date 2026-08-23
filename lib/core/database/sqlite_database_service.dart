@@ -54,7 +54,8 @@ class SqliteDatabaseService implements DatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         periodReminderEnabled INTEGER,
         fertilityReminderEnabled INTEGER,
-        checkUpReminderEnabled INTEGER
+        checkUpReminderEnabled INTEGER,
+        cycleRemindersEnabled INTEGER
       )
     ''');
 
@@ -132,7 +133,11 @@ class SqliteDatabaseService implements DatabaseService {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Migration logic will be implemented here when database version increments.
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE ${DatabaseConstants.tableReminderSettings} ADD COLUMN cycleRemindersEnabled INTEGER DEFAULT 1',
+      );
+    }
   }
 
   @override

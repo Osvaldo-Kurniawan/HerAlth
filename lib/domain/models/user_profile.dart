@@ -78,17 +78,20 @@ class ReminderSettings {
   final bool periodReminderEnabled;
   final bool fertilityReminderEnabled;
   final bool checkUpReminderEnabled;
+  final bool cycleRemindersEnabled;
 
   const ReminderSettings({
     required this.periodReminderEnabled,
     required this.fertilityReminderEnabled,
     required this.checkUpReminderEnabled,
+    required this.cycleRemindersEnabled,
   });
 
   ReminderSettings copyWith({
     bool? periodReminderEnabled,
     bool? fertilityReminderEnabled,
     bool? checkUpReminderEnabled,
+    bool? cycleRemindersEnabled,
   }) {
     return ReminderSettings(
       periodReminderEnabled:
@@ -97,6 +100,8 @@ class ReminderSettings {
           fertilityReminderEnabled ?? this.fertilityReminderEnabled,
       checkUpReminderEnabled:
           checkUpReminderEnabled ?? this.checkUpReminderEnabled,
+      cycleRemindersEnabled:
+          cycleRemindersEnabled ?? this.cycleRemindersEnabled,
     );
   }
 
@@ -105,6 +110,7 @@ class ReminderSettings {
       'periodReminderEnabled': periodReminderEnabled ? 1 : 0,
       'fertilityReminderEnabled': fertilityReminderEnabled ? 1 : 0,
       'checkUpReminderEnabled': checkUpReminderEnabled ? 1 : 0,
+      'cycleRemindersEnabled': cycleRemindersEnabled ? 1 : 0,
     };
   }
 
@@ -119,6 +125,10 @@ class ReminderSettings {
       checkUpReminderEnabled:
           json['checkUpReminderEnabled'] == 1 ||
           json['checkUpReminderEnabled'] == true,
+      cycleRemindersEnabled:
+          json['cycleRemindersEnabled'] == 1 ||
+          json['cycleRemindersEnabled'] == true ||
+          json['cycleRemindersEnabled'] == null, // Fallback if old DB version had no column
     );
   }
 }

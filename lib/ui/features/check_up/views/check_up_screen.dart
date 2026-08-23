@@ -67,6 +67,7 @@ class CheckUpScreen extends StatelessWidget {
                   final profileVM = ProfileViewModel(
                     di.userProfileRepository,
                     di.backupRepository,
+                    di.cycleRepository,
                   );
                   profileVM.loadProfileData();
                   Navigator.push(

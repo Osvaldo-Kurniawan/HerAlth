@@ -142,6 +142,7 @@ class OnboardingViewModel extends ChangeNotifier {
         periodReminderEnabled: true,
         fertilityReminderEnabled: true,
         checkUpReminderEnabled: true,
+        cycleRemindersEnabled: true,
       );
       const ai = AiSettings(
         analysisModel: 'General Health GPT',
