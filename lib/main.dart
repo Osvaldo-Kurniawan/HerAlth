@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'core/config/app_config.dart';
 import 'core/di/service_locator.dart';
 import 'ui/features/onboarding/view_models/onboarding_view_model.dart';
 import 'ui/features/onboarding/views/onboarding_screen.dart';
@@ -7,6 +8,7 @@ import 'ui/features/home/views/main_navigation_container.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppConfig.load();
   await ServiceLocator.instance.setup();
   runApp(const HerAlthApp());
 }

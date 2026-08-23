@@ -33,7 +33,12 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
       di.cycleRepository,
       di.cycleEngine,
     );
-    _checkUpViewModel = CheckUpViewModel(di.checkUpRepository);
+    _checkUpViewModel = CheckUpViewModel(
+      di.checkUpRepository,
+      cycleRepository: di.cycleRepository,
+      userProfileRepository: di.userProfileRepository,
+      analysisService: di.checkUpAnalysisService,
+    );
     _readsViewModel = ReadsViewModel(di.articleRepository);
 
     // Initial load

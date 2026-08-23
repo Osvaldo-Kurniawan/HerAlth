@@ -19,6 +19,8 @@ import '../../data/repositories/article_repository_impl.dart';
 import '../../domain/repositories/backup_repository.dart';
 import '../../data/repositories/backup_repository_impl.dart';
 import '../../domain/services/cycle_engine.dart';
+import '../../domain/services/check_up_analysis_service.dart';
+import '../../data/services/gemini_analysis_service.dart';
 
 class ServiceLocator {
   static final ServiceLocator instance = ServiceLocator._internal();
@@ -33,6 +35,7 @@ class ServiceLocator {
   late final ArticleRepository articleRepository;
   late final BackupRepository backupRepository;
   late final CycleEngine cycleEngine;
+  late final CheckUpAnalysisService checkUpAnalysisService;
 
   Future<void> setup() async {
     // 1. Database
@@ -64,5 +67,6 @@ class ServiceLocator {
 
     // 4. Domain Services
     cycleEngine = CycleEngine();
+    checkUpAnalysisService = GeminiAnalysisService();
   }
 }
