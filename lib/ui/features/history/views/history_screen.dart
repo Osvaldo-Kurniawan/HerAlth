@@ -263,7 +263,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 Container(
                   width: 4,
                   height: 4,
-                  margin: const EdgeInsets.bottom(4),
+                  margin: const EdgeInsets.only(bottom: 4),
                   decoration: const BoxDecoration(
                     color: Color(0xFFE88A8A),
                     shape: BoxShape.circle,
@@ -372,13 +372,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 // Month Label
                 Padding(
                   padding: const EdgeInsets.only(left: 48.0, top: 16.0, bottom: 16.0),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                    color: Color(0xFF8E8E8E),
+                  child: Text(
+                    month,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      color: Color(0xFF8E8E8E),
+                    ),
                   ),
-                  child: Text(month),
                 ),
                 // Cards under this month
                 ...list.map((cu) => _buildTimelineItem(cu, cycles)),
