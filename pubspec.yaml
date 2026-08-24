@@ -37,6 +37,10 @@ dependencies:
   sqflite: ^2.3.0
   path_provider: ^2.1.1
   path: ^1.9.0
+  file_picker: ^10.3.3
+  flutter_dotenv: ^6.0.1
+  http: ^1.5.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +64,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - .env
 
   # To add assets to your application, add an assets section, like this:
   assets:

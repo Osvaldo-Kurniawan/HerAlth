@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../domain/models/user_profile.dart';
 import '../../../core/error_state_widget.dart';
+import '../../history/view_models/history_view_model.dart';
+import '../../history/views/history_screen.dart';
 import '../../onboarding/view_models/onboarding_view_model.dart';
 import '../../onboarding/views/onboarding_screen.dart';
 import '../../home/views/main_navigation_container.dart';
@@ -22,7 +26,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    widget.viewModel.loadProfileData();
+    if (!widget.viewModel.isLoading && !widget.viewModel.hasLoaded) {
+      widget.viewModel.loadProfileData();
+    }
   }
 
   @override
@@ -34,9 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return const Scaffold(
             backgroundColor: Color(0xFFFCF5F5),
             body: Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF9E385A),
-              ),
+              child: CircularProgressIndicator(color: Color(0xFF9E385A)),
             ),
           );
         }
@@ -54,11 +58,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final profile = widget.viewModel.profile;
         final settings = widget.viewModel.cycleSettings;
         final reminders = widget.viewModel.reminderSettings;
+        final aiSettings =
+            widget.viewModel.aiSettings ??
+            const AiSettings(
+              analysisModel: 'Gemini',
+              autoAnalyzeUltrasounds: false,
+            );
 
-        final nicknameDisplay = profile?.name.isNotEmpty == true ? profile!.name : 'Not set';
-        final cycleLengthDisplay = settings != null ? '${settings.averageCycleLength} days' : '28 days';
-        final periodLengthDisplay = settings != null ? '${settings.averagePeriodDuration} days' : '5 days';
-        
+        final nicknameDisplay = profile?.name.isNotEmpty == true
+            ? profile!.name
+            : 'Not set';
+        final cycleLengthDisplay = settings != null
+            ? '${settings.averageCycleLength} days'
+            : '28 days';
+        final periodLengthDisplay = settings != null
+            ? '${settings.averagePeriodDuration} days'
+            : '5 days';
+
         String lastPeriodDisplay = 'Not set';
         if (widget.viewModel.lastPeriodDate != null) {
           final date = widget.viewModel.lastPeriodDate!;
@@ -71,13 +87,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             backgroundColor: const Color(0xFFFCF5F5),
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2C2C2C), size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Color(0xFF2C2C2C),
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             scrolledUnderElevation: 0,
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 8.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -99,6 +122,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   nickname: nicknameDisplay,
                   onTapNickname: _showEditNicknameDialog,
                 ),
+                const SizedBox(height: 24),
+
+                // Check-up Activity Section
+                _buildSectionHeader('CHECK-UP ACTIVITY'),
+                _buildCardContainer([
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildActivityMetric(
+                            value: '${widget.viewModel.checkUpCount}',
+                            label: 'CHECK-UPS SAVED',
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 48,
+                          color: const Color(0xFFF2ECEC),
+                        ),
+                        Expanded(
+                          child: _buildActivityMetric(
+                            value: widget.viewModel.latestCheckUpDate == null
+                                ? '—'
+                                : _formatDate(
+                                    widget.viewModel.latestCheckUpDate!,
+                                  ),
+                            label: 'LATEST ENTRY',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const _CustomDivider(),
+                  _buildRowItem(
+                    icon: Icons.history_rounded,
+                    title: 'View check-up history',
+                    onTap: _openHistory,
+                  ),
+                ]),
                 const SizedBox(height: 24),
 
                 // Cycle Section
@@ -197,38 +263,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildCardContainer([
                   _buildRowItem(
                     icon: Icons.psychology_outlined,
-                    title: 'Insight depth',
-                    trailingText: 'Balanced',
-                    onTap: () {
-                      // TODO(checkup): Implement AI insight depth configuration when the Check Up feature is implemented.
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Insight depth configuration will be available with the Check Up feature.'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
+                    title: 'Analysis engine',
+                    trailingText: AppConfig.geminiModel,
+                    showChevron: false,
+                    onTap: null,
                   ),
                   const _CustomDivider(),
                   _buildToggleRow(
                     icon: Icons.waves_rounded,
                     title: 'Use ultrasound in analysis',
-                    value: false,
-                    onChanged: (val) {
-                      // TODO(checkup): Implement ultrasound-assisted analysis when the Check Up feature is implemented.
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Ultrasound analysis will be available with the Check Up feature.'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
+                    value: aiSettings.autoAnalyzeUltrasounds,
+                    onChanged: (value) => widget.viewModel.updateAiSettings(
+                      aiSettings.copyWith(autoAnalyzeUltrasounds: value),
+                    ),
                   ),
                 ]),
                 const SizedBox(height: 24),
 
                 // Your Data Section
-                _buildSectionHeader('YOUR DATA'),
+                _buildSectionHeader('LOCAL DATA'),
                 _buildCardContainer([
                   _buildRowItem(
                     icon: Icons.file_upload_outlined,
@@ -330,6 +383,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildActivityMetric({required String value, required String label}) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: 'serif',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2C2C2C),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.7,
+            color: Color(0xFF8E8E8E),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDeviceAccountCard({
     required double storageMb,
     required String nickname,
@@ -383,10 +463,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 4),
                     const Text(
                       'No account · No cloud · No sync',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF8E8E8E),
-                      ),
+                      style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E)),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -408,7 +485,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: onTapNickname,
             borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
+              padding: const EdgeInsets.symmetric(
+                vertical: 12.0,
+                horizontal: 4.0,
+              ),
               child: Row(
                 children: [
                   const Expanded(
@@ -474,10 +554,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (trailingText != null) ...[
               Text(
                 trailingText,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF8E8E8E),
-                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF8E8E8E)),
               ),
               const SizedBox(width: 8),
             ],
@@ -532,7 +609,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // --- ACTIONS & SHEETS ---
 
   void _showEditNicknameDialog() {
-    final controller = TextEditingController(text: widget.viewModel.profile?.name ?? '');
+    final controller = TextEditingController(
+      text: widget.viewModel.profile?.name ?? '',
+    );
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -556,7 +635,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF8E8E8E))),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF8E8E8E)),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -566,7 +648,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await widget.viewModel.updateNickname(newName);
               } catch (_) {}
             },
-            child: const Text('Save', style: TextStyle(color: Color(0xFF9E385A), fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Save',
+              style: TextStyle(
+                color: Color(0xFF9E385A),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -635,7 +723,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 8),
                     Text(
                       subtitle,
-                      style: const TextStyle(fontSize: 14, color: Color(0xFF8E8E8E)),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF8E8E8E),
+                      ),
                     ),
                     const SizedBox(height: 24),
                     // Standard ListWheelScrollView for nice selection
@@ -666,8 +757,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       '$val',
                                       style: TextStyle(
                                         fontSize: isSelected ? 24 : 18,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                        color: isSelected ? const Color(0xFF9E385A) : const Color(0xFF8E8E8E),
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: isSelected
+                                            ? const Color(0xFF9E385A)
+                                            : const Color(0xFF8E8E8E),
                                       ),
                                     ),
                                   );
@@ -702,7 +797,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           borderRadius: BorderRadius.circular(28),
                         ),
                       ),
-                      child: const Text('Save', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -727,8 +828,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final daysInMonth = DateTime(currentMonth.year, currentMonth.month + 1, 0).day;
-            final firstWeekday = DateTime(currentMonth.year, currentMonth.month, 1).weekday % 7; // Sunday is 0
+            final daysInMonth = DateTime(
+              currentMonth.year,
+              currentMonth.month + 1,
+              0,
+            ).day;
+            final firstWeekday =
+                DateTime(currentMonth.year, currentMonth.month, 1).weekday %
+                7; // Sunday is 0
 
             return SafeArea(
               child: Padding(
@@ -752,22 +859,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 16,
+                          ),
                           onPressed: () {
                             setModalState(() {
-                              currentMonth = DateTime(currentMonth.year, currentMonth.month - 1);
+                              currentMonth = DateTime(
+                                currentMonth.year,
+                                currentMonth.month - 1,
+                              );
                             });
                           },
                         ),
                         Text(
                           '${_getMonthName(currentMonth.month)} ${currentMonth.year}',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                          icon: const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 16,
+                          ),
                           onPressed: () {
                             setModalState(() {
-                              currentMonth = DateTime(currentMonth.year, currentMonth.month + 1);
+                              currentMonth = DateTime(
+                                currentMonth.year,
+                                currentMonth.month + 1,
+                              );
                             });
                           },
                         ),
@@ -778,13 +900,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: const [
-                        Expanded(child: Center(child: Text('S', style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E), fontWeight: FontWeight.bold)))),
-                        Expanded(child: Center(child: Text('M', style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E), fontWeight: FontWeight.bold)))),
-                        Expanded(child: Center(child: Text('T', style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E), fontWeight: FontWeight.bold)))),
-                        Expanded(child: Center(child: Text('W', style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E), fontWeight: FontWeight.bold)))),
-                        Expanded(child: Center(child: Text('T', style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E), fontWeight: FontWeight.bold)))),
-                        Expanded(child: Center(child: Text('F', style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E), fontWeight: FontWeight.bold)))),
-                        Expanded(child: Center(child: Text('S', style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E), fontWeight: FontWeight.bold)))),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'S',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8E8E8E),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'M',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8E8E8E),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'T',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8E8E8E),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'W',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8E8E8E),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'T',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8E8E8E),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'F',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8E8E8E),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'S',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8E8E8E),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -793,19 +992,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: 35, // 5 rows
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 7,
-                        mainAxisSpacing: 6,
-                        crossAxisSpacing: 6,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 7,
+                            mainAxisSpacing: 6,
+                            crossAxisSpacing: 6,
+                          ),
                       itemBuilder: (context, index) {
                         final dayIndex = index - firstWeekday + 1;
                         if (dayIndex <= 0 || dayIndex > daysInMonth) {
                           return const SizedBox.shrink();
                         }
 
-                        final dayDate = DateTime(currentMonth.year, currentMonth.month, dayIndex);
-                        final isSelected = dayDate.year == selectedDate.year &&
+                        final dayDate = DateTime(
+                          currentMonth.year,
+                          currentMonth.month,
+                          dayIndex,
+                        );
+                        final isSelected =
+                            dayDate.year == selectedDate.year &&
                             dayDate.month == selectedDate.month &&
                             dayDate.day == selectedDate.day;
 
@@ -819,15 +1024,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Container(
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: isSelected ? const Color(0xFF9E385A) : Colors.transparent,
+                              color: isSelected
+                                  ? const Color(0xFF9E385A)
+                                  : Colors.transparent,
                               shape: BoxShape.circle,
                             ),
                             child: Text(
                               '$dayIndex',
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                color: isSelected ? Colors.white : const Color(0xFF2C2C2C),
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isSelected
+                                    ? Colors.white
+                                    : const Color(0xFF2C2C2C),
                               ),
                             ),
                           ),
@@ -849,7 +1060,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           borderRadius: BorderRadius.circular(28),
                         ),
                       ),
-                      child: const Text('Save', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -864,22 +1081,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _exportBackupFlow() async {
     try {
       final tempDir = await getTemporaryDirectory();
-      final path = p.join(tempDir.path, 'heralth_backup_${DateTime.now().millisecondsSinceEpoch}.json');
+      final path = p.join(
+        tempDir.path,
+        'heralth_backup_${DateTime.now().millisecondsSinceEpoch}.json',
+      );
       await widget.viewModel.exportBackup(path);
-      
+
       if (mounted) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
             backgroundColor: Colors.white,
             surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            title: const Text('Backup Exported', style: TextStyle(fontFamily: 'serif', fontWeight: FontWeight.bold)),
-            content: Text('Your local backup has been successfully exported to:\n\n$path'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            title: const Text(
+              'Backup Exported',
+              style: TextStyle(
+                fontFamily: 'serif',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              'Your local backup has been successfully exported to:\n\n$path',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Close', style: TextStyle(color: Color(0xFF9E385A), fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Close',
+                  style: TextStyle(
+                    color: Color(0xFF9E385A),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -903,7 +1139,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.cleaning_services_outlined, size: 48, color: Color(0xFF9E385A)),
+                const Icon(
+                  Icons.cleaning_services_outlined,
+                  size: 48,
+                  color: Color(0xFF9E385A),
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'Clear Check-up History?',
@@ -919,17 +1159,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Text(
                   'This will permanently delete all your previous check-up logs, symptom reports, and analysis results from this device. Cycle tracking logs are not deleted.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Color(0xFF6E6E6E), height: 1.4),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF6E6E6E),
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () async {
                     Navigator.pop(context);
                     final di = ServiceLocator.instance;
-                    await widget.viewModel.clearCheckUpHistory(di.checkUpRepository, di.reportRepository);
+                    await widget.viewModel.clearCheckUpHistory(
+                      di.checkUpRepository,
+                      di.reportRepository,
+                    );
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Check-up history cleared.')),
+                        const SnackBar(
+                          content: Text('Check-up history cleared.'),
+                        ),
                       );
                     }
                   },
@@ -938,14 +1187,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     foregroundColor: Colors.white,
                     elevation: 0,
                     minimumSize: const Size.fromHeight(56),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
                   ),
-                  child: const Text('Yes, Clear History', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Yes, Clear History',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: Color(0xFF8E8E8E), fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Color(0xFF8E8E8E),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -970,7 +1230,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.delete_outline_rounded, size: 48, color: Color(0xFFC95B6F)),
+                const Icon(
+                  Icons.delete_outline_rounded,
+                  size: 48,
+                  color: Color(0xFFC95B6F),
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'Delete All Application Data?',
@@ -986,7 +1250,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Text(
                   'This is a destructive action. All cycle logs, settings, preferences, and symptoms will be permanently wiped. This cannot be undone.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Color(0xFF6E6E6E), height: 1.4),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF6E6E6E),
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
@@ -1007,7 +1275,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const MainNavigationContainer(),
+                                  builder: (context) =>
+                                      const MainNavigationContainer(),
                                 ),
                                 (route) => false,
                               );
@@ -1023,14 +1292,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     foregroundColor: Colors.white,
                     elevation: 0,
                     minimumSize: const Size.fromHeight(56),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
                   ),
-                  child: const Text('Yes, Delete Everything', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Yes, Delete Everything',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: Color(0xFF8E8E8E), fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Color(0xFF8E8E8E),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1043,8 +1323,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _navigateToPrivacyScreen() {
     Navigator.push(
       context,
+      MaterialPageRoute(builder: (context) => const PrivacyScreen()),
+    );
+  }
+
+  void _openHistory() {
+    final di = ServiceLocator.instance;
+    final historyViewModel = HistoryViewModel(
+      di.cycleRepository,
+      di.checkUpRepository,
+      di.reportRepository,
+      userProfileRepository: di.userProfileRepository,
+      cycleEngine: di.cycleEngine,
+    );
+    Navigator.push(
+      context,
       MaterialPageRoute(
-        builder: (context) => const PrivacyScreen(),
+        builder: (_) => HistoryScreen(viewModel: historyViewModel),
       ),
     );
   }
@@ -1052,14 +1347,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // --- HELPERS ---
 
   String _formatDate(DateTime date) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${months[date.month - 1]} ${date.day}';
   }
 
   String _getMonthName(int month) {
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
@@ -1077,7 +1395,11 @@ class PrivacyScreen extends StatelessWidget {
         backgroundColor: const Color(0xFFFCF5F5),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2C2C2C), size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Color(0xFF2C2C2C),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         scrolledUnderElevation: 0,
