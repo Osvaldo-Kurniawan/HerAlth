@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../domain/models/backup.dart';
 import '../../domain/repositories/backup_repository.dart';
 import '../../domain/repositories/check_up_repository.dart';
@@ -46,14 +47,18 @@ class BackupRepositoryImpl implements BackupRepository {
       exportedAt: DateTime.now(),
     );
 
-    await _backupService.exportBackup(backupData);
-    // Future implementation: Write the output of exportBackup to targetFilePath
+    final backupString = await _backupService.exportBackup(backupData);
+    final file = File(targetFilePath);
+    await file.writeAsString(backupString);
   }
 
   @override
   Future<void> restoreBackup(String sourceFilePath) async {
-    // Future implementation: Read jsonStr from sourceFilePath
-    const String jsonStr = '{}';
+    final file = File(sourceFilePath);
+    if (!await file.exists()) {
+      throw FileSystemException('Backup file not found', sourceFilePath);
+    }
+    final jsonStr = await file.readAsString();
     final backupData = await _backupService.importBackup(jsonStr);
 
     if (backupData.userProfile != null) {

@@ -46,8 +46,23 @@ class CheckUpScreen extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (_) => HistoryScreen(viewModel: historyVM),
                 ),
-              );
-            },
+                onPressed: () {
+                  final profileVM = ProfileViewModel(
+                    di.userProfileRepository,
+                    di.backupRepository,
+                    di.cycleRepository,
+                  );
+                  profileVM.loadProfileData();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProfileScreen(viewModel: profileVM),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+            ],
           ),
           IconButton(
             tooltip: 'Profile',

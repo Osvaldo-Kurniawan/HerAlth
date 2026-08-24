@@ -8,7 +8,7 @@ abstract class DatabaseService {
 
 class DatabaseConstants {
   static const String databaseName = 'heralth.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 2;
 
   // Tables
   static const String tableUserProfile = 'user_profile';

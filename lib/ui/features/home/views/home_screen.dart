@@ -145,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     di.userProfileRepository,
                     di.backupRepository,
                     checkUpRepository: di.checkUpRepository,
+                    di.cycleRepository,
                   );
                   profileVM.loadProfileData();
                   Navigator.push(
