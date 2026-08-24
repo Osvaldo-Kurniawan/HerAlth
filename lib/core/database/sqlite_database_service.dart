@@ -59,15 +59,6 @@ class SqliteDatabaseService implements DatabaseService {
       )
     ''');
 
-    // AI Settings
-    await db.execute('''
-      CREATE TABLE ${DatabaseConstants.tableAiSettings} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        analysisModel TEXT,
-        autoAnalyzeUltrasounds INTEGER
-      )
-    ''');
-
     // Cycles
     await db.execute('''
       CREATE TABLE ${DatabaseConstants.tableCycle} (

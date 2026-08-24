@@ -66,9 +66,7 @@ class _FakeUserProfileRepository implements UserProfileRepository {
   @override
   Future<void> clearAllData() async {}
 
-  @override
-  Future<AiSettings?> getAiSettings() async =>
-      const AiSettings(analysisModel: 'Gemini', autoAnalyzeUltrasounds: false);
+
 
   @override
   Future<CycleSettings?> getCycleSettings() async =>
@@ -81,8 +79,7 @@ class _FakeUserProfileRepository implements UserProfileRepository {
   Future<UserProfile?> getUserProfile() async =>
       const UserProfile(name: 'Jane Doe', age: 28, height: 165, weight: 60);
 
-  @override
-  Future<void> saveAiSettings(AiSettings settings) async {}
+
 
   @override
   Future<void> saveCycleSettings(CycleSettings settings) async {}
@@ -125,6 +122,5 @@ void main() {
 
     await tester.scrollUntilVisible(find.text('LOCAL DATA'), 500);
     expect(find.text('LOCAL DATA'), findsOneWidget);
-    expect(find.text('gemini-3.5-flash'), findsOneWidget);
   });
 }

@@ -37,10 +37,6 @@ class _RestoreBackupViewState extends State<RestoreBackupView> {
     "fertilityReminderEnabled": false,
     "checkUpReminderEnabled": true
   },
-  "aiSettings": {
-    "analysisModel": "Premium Health Model",
-    "autoAnalyzeUltrasounds": true
-  },
   "cycles": [],
   "cycleEntries": [],
   "checkUps": [],

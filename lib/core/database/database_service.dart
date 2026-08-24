@@ -14,7 +14,6 @@ class DatabaseConstants {
   static const String tableUserProfile = 'user_profile';
   static const String tableCycleSettings = 'cycle_settings';
   static const String tableReminderSettings = 'reminder_settings';
-  static const String tableAiSettings = 'ai_settings';
   static const String tableCycle = 'cycles';
   static const String tableCycleEntry = 'cycle_entries';
   static const String tableCheckUp = 'check_ups';

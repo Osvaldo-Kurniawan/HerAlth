@@ -47,8 +47,7 @@ class ProfileViewModel extends ChangeNotifier {
   ReminderSettings? _reminderSettings;
   ReminderSettings? get reminderSettings => _reminderSettings;
 
-  AiSettings? _aiSettings;
-  AiSettings? get aiSettings => _aiSettings;
+
 
   int _checkUpCount = 0;
   int get checkUpCount => _checkUpCount;
@@ -70,7 +69,6 @@ class ProfileViewModel extends ChangeNotifier {
       _profile = await _userProfileRepository.getUserProfile();
       _cycleSettings = await _userProfileRepository.getCycleSettings();
       _reminderSettings = await _userProfileRepository.getReminderSettings();
-      _aiSettings = await _userProfileRepository.getAiSettings();
       final checkUps = await _checkUpRepository?.getCheckUps() ?? [];
       _checkUpCount = checkUps.length;
       _latestCheckUpDate = checkUps.isEmpty ? null : checkUps.first.date;
@@ -200,17 +198,6 @@ class ProfileViewModel extends ChangeNotifier {
       await loadProfileData();
     } catch (e) {
       _errorMessage = 'Failed to update reminder settings.';
-      notifyListeners();
-      rethrow;
-    }
-  }
-
-  Future<void> updateAiSettings(AiSettings settings) async {
-    try {
-      await _userProfileRepository.saveAiSettings(settings);
-      await loadProfileData();
-    } catch (e) {
-      _errorMessage = 'Failed to update AI settings.';
       notifyListeners();
       rethrow;
     }

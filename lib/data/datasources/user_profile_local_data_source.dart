@@ -10,10 +10,6 @@ abstract class UserProfileLocalDataSource {
 
   Future<ReminderSettings?> getReminderSettings();
   Future<void> saveReminderSettings(ReminderSettings settings);
-
-  Future<AiSettings?> getAiSettings();
-  Future<void> saveAiSettings(AiSettings settings);
-
   Future<void> clearAllData();
 }
 
@@ -80,30 +76,12 @@ class UserProfileLocalDataSourceImpl implements UserProfileLocalDataSource {
   }
 
   @override
-  Future<AiSettings?> getAiSettings() async {
-    final db = await _databaseService.database;
-    final maps = await db.query(DatabaseConstants.tableAiSettings, limit: 1);
-    if (maps.isEmpty) return null;
-    return AiSettings.fromJson(maps.first);
-  }
-
-  @override
-  Future<void> saveAiSettings(AiSettings settings) async {
-    final db = await _databaseService.database;
-    await db.transaction((txn) async {
-      await txn.delete(DatabaseConstants.tableAiSettings);
-      await txn.insert(DatabaseConstants.tableAiSettings, settings.toJson());
-    });
-  }
-
-  @override
   Future<void> clearAllData() async {
     final db = await _databaseService.database;
     await db.transaction((txn) async {
       await txn.delete(DatabaseConstants.tableUserProfile);
       await txn.delete(DatabaseConstants.tableCycleSettings);
       await txn.delete(DatabaseConstants.tableReminderSettings);
-      await txn.delete(DatabaseConstants.tableAiSettings);
       await txn.delete(DatabaseConstants.tableCycle);
       await txn.delete(DatabaseConstants.tableCycleEntry);
       await txn.delete(DatabaseConstants.tableCheckUp);

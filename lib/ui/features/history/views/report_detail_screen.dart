@@ -173,7 +173,6 @@ class ReportDetailScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // 3. HerAlth's Insight Card
-            // TODO(checkup): Implement detailed Check Up report calculation and dynamic AI insight generation.
             _buildCardHeader("HERALTH'S INSIGHT"),
             _buildCardContainer(
               Padding(

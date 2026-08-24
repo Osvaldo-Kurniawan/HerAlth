@@ -11,7 +11,6 @@ class FakeUserProfileRepository implements UserProfileRepository {
   UserProfile? profile;
   CycleSettings? settings;
   ReminderSettings? reminders;
-  AiSettings? ai;
 
   @override
   Future<UserProfile?> getUserProfile() async => profile;
@@ -38,19 +37,10 @@ class FakeUserProfileRepository implements UserProfileRepository {
   }
 
   @override
-  Future<AiSettings?> getAiSettings() async => ai;
-
-  @override
-  Future<void> saveAiSettings(AiSettings aiSettings) async {
-    ai = aiSettings;
-  }
-
-  @override
   Future<void> clearAllData() async {
     profile = null;
     settings = null;
     reminders = null;
-    ai = null;
   }
 }
 

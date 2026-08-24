@@ -7,7 +7,6 @@ class BackupData {
   final UserProfile? userProfile;
   final CycleSettings? cycleSettings;
   final ReminderSettings? reminderSettings;
-  final AiSettings? aiSettings;
   final List<Cycle> cycles;
   final List<CycleEntry> cycleEntries;
   final List<CheckUp> checkUps;
@@ -19,7 +18,6 @@ class BackupData {
     this.userProfile,
     this.cycleSettings,
     this.reminderSettings,
-    this.aiSettings,
     required this.cycles,
     required this.cycleEntries,
     required this.checkUps,
@@ -33,7 +31,6 @@ class BackupData {
       'userProfile': userProfile?.toJson(),
       'cycleSettings': cycleSettings?.toJson(),
       'reminderSettings': reminderSettings?.toJson(),
-      'aiSettings': aiSettings?.toJson(),
       'cycles': cycles.map((e) => e.toJson()).toList(),
       'cycleEntries': cycleEntries.map((e) => e.toJson()).toList(),
       'checkUps': checkUps.map((e) => e.toJson()).toList(),
@@ -53,9 +50,6 @@ class BackupData {
           : null,
       reminderSettings: json['reminderSettings'] != null
           ? ReminderSettings.fromJson(json['reminderSettings'])
-          : null,
-      aiSettings: json['aiSettings'] != null
-          ? AiSettings.fromJson(json['aiSettings'])
           : null,
       cycles:
           (json['cycles'] as List?)?.map((e) => Cycle.fromJson(e)).toList() ??

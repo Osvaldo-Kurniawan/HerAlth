@@ -10,8 +10,5 @@ abstract class UserProfileRepository {
   Future<ReminderSettings?> getReminderSettings();
   Future<void> saveReminderSettings(ReminderSettings settings);
 
-  Future<AiSettings?> getAiSettings();
-  Future<void> saveAiSettings(AiSettings settings);
-
   Future<void> clearAllData();
 }

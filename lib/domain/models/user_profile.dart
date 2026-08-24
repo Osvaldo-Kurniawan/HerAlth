@@ -133,36 +133,3 @@ class ReminderSettings {
   }
 }
 
-class AiSettings {
-  final String analysisModel;
-  final bool autoAnalyzeUltrasounds;
-
-  const AiSettings({
-    required this.analysisModel,
-    required this.autoAnalyzeUltrasounds,
-  });
-
-  AiSettings copyWith({String? analysisModel, bool? autoAnalyzeUltrasounds}) {
-    return AiSettings(
-      analysisModel: analysisModel ?? this.analysisModel,
-      autoAnalyzeUltrasounds:
-          autoAnalyzeUltrasounds ?? this.autoAnalyzeUltrasounds,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'analysisModel': analysisModel,
-      'autoAnalyzeUltrasounds': autoAnalyzeUltrasounds ? 1 : 0,
-    };
-  }
-
-  factory AiSettings.fromJson(Map<String, dynamic> json) {
-    return AiSettings(
-      analysisModel: json['analysisModel'] as String? ?? 'General Health GPT',
-      autoAnalyzeUltrasounds:
-          json['autoAnalyzeUltrasounds'] == 1 ||
-          json['autoAnalyzeUltrasounds'] == true,
-    );
-  }
-}

@@ -38,16 +38,6 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @override
-  Future<AiSettings?> getAiSettings() {
-    return _localDataSource.getAiSettings();
-  }
-
-  @override
-  Future<void> saveAiSettings(AiSettings settings) {
-    return _localDataSource.saveAiSettings(settings);
-  }
-
-  @override
   Future<void> clearAllData() {
     return _localDataSource.clearAllData();
   }

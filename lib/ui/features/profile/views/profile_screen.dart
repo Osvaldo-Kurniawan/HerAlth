@@ -58,12 +58,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final profile = widget.viewModel.profile;
         final settings = widget.viewModel.cycleSettings;
         final reminders = widget.viewModel.reminderSettings;
-        final aiSettings =
-            widget.viewModel.aiSettings ??
-            const AiSettings(
-              analysisModel: 'Gemini',
-              autoAnalyzeUltrasounds: false,
-            );
 
         final nicknameDisplay = profile?.name.isNotEmpty == true
             ? profile!.name
@@ -256,28 +250,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(fontSize: 12, color: Color(0xFF8E8E8E)),
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                // AI Section
-                _buildSectionHeader('AI'),
-                _buildCardContainer([
-                  _buildRowItem(
-                    icon: Icons.psychology_outlined,
-                    title: 'Analysis engine',
-                    trailingText: AppConfig.geminiModel,
-                    showChevron: false,
-                    onTap: null,
-                  ),
-                  const _CustomDivider(),
-                  _buildToggleRow(
-                    icon: Icons.waves_rounded,
-                    title: 'Use ultrasound in analysis',
-                    value: aiSettings.autoAnalyzeUltrasounds,
-                    onChanged: (value) => widget.viewModel.updateAiSettings(
-                      aiSettings.copyWith(autoAnalyzeUltrasounds: value),
-                    ),
-                  ),
-                ]),
                 const SizedBox(height: 24),
 
                 // Your Data Section

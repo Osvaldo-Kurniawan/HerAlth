@@ -107,9 +107,6 @@ class OnboardingViewModel extends ChangeNotifier {
           backupData.reminderSettings!,
         );
       }
-      if (backupData.aiSettings != null) {
-        await _userProfileRepository.saveAiSettings(backupData.aiSettings!);
-      }
 
       _restoreStatusMessage = 'Restore successful!';
       _isLoading = false;
@@ -144,15 +141,10 @@ class OnboardingViewModel extends ChangeNotifier {
         checkUpReminderEnabled: true,
         cycleRemindersEnabled: true,
       );
-      const ai = AiSettings(
-        analysisModel: 'General Health GPT',
-        autoAnalyzeUltrasounds: false,
-      );
 
       await _userProfileRepository.saveUserProfile(profile);
       await _userProfileRepository.saveCycleSettings(settings);
       await _userProfileRepository.saveReminderSettings(reminders);
-      await _userProfileRepository.saveAiSettings(ai);
 
       if (_lastPeriodDate != null) {
         final newCycle = Cycle(

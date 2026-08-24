@@ -75,9 +75,6 @@ class _FakeUserProfileRepository implements UserProfileRepository {
   Future<void> clearAllData() async {}
 
   @override
-  Future<AiSettings?> getAiSettings() async => null;
-
-  @override
   Future<CycleSettings?> getCycleSettings() async =>
       const CycleSettings(averageCycleLength: 28, averagePeriodDuration: 5);
 
@@ -87,9 +84,6 @@ class _FakeUserProfileRepository implements UserProfileRepository {
   @override
   Future<UserProfile?> getUserProfile() async =>
       const UserProfile(name: 'Jane', age: 28, height: 165, weight: 60);
-
-  @override
-  Future<void> saveAiSettings(AiSettings settings) async {}
 
   @override
   Future<void> saveCycleSettings(CycleSettings settings) async {}

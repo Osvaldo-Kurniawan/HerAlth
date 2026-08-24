@@ -27,7 +27,6 @@ class BackupRepositoryImpl implements BackupRepository {
     final profile = await _userProfileRepository.getUserProfile();
     final settings = await _userProfileRepository.getCycleSettings();
     final reminders = await _userProfileRepository.getReminderSettings();
-    final ai = await _userProfileRepository.getAiSettings();
     final cycles = await _cycleRepository.getCycles();
     final entries = await _cycleRepository.getCycleEntries();
     final checkUps = await _checkUpRepository.getCheckUps();
@@ -38,7 +37,6 @@ class BackupRepositoryImpl implements BackupRepository {
       userProfile: profile,
       cycleSettings: settings,
       reminderSettings: reminders,
-      aiSettings: ai,
       cycles: cycles,
       cycleEntries: entries,
       checkUps: checkUps,
@@ -71,9 +69,6 @@ class BackupRepositoryImpl implements BackupRepository {
       await _userProfileRepository.saveReminderSettings(
         backupData.reminderSettings!,
       );
-    }
-    if (backupData.aiSettings != null) {
-      await _userProfileRepository.saveAiSettings(backupData.aiSettings!);
     }
 
     for (var cycle in backupData.cycles) {
