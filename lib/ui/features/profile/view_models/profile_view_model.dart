@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -7,7 +8,6 @@ import '../../../../core/database/database_service.dart';
 import '../../../../domain/models/user_profile.dart';
 import '../../../../domain/models/cycle.dart';
 import '../../../../domain/repositories/backup_repository.dart';
-import '../../../../domain/repositories/check_up_repository.dart';
 import '../../../../domain/repositories/user_profile_repository.dart';
 import '../../../../domain/repositories/cycle_repository.dart';
 import '../../../../domain/repositories/check_up_repository.dart';
@@ -16,23 +16,24 @@ import '../../../../domain/repositories/report_repository.dart';
 class ProfileViewModel extends ChangeNotifier {
   final UserProfileRepository _userProfileRepository;
   final BackupRepository _backupRepository;
-  final CheckUpRepository? _checkUpRepository;
-
-  ProfileViewModel(
-    this._userProfileRepository,
-    this._backupRepository, {
-    CheckUpRepository? checkUpRepository,
-  }) : _checkUpRepository = checkUpRepository;
   final CycleRepository _cycleRepository;
+  final CheckUpRepository? _checkUpRepository;
+  final Future<double> Function()? _storageSizeLoader;
 
   ProfileViewModel(
     this._userProfileRepository,
     this._backupRepository,
-    this._cycleRepository,
-  );
+    this._cycleRepository, {
+    CheckUpRepository? checkUpRepository,
+    Future<double> Function()? storageSizeLoader,
+  }) : _checkUpRepository = checkUpRepository,
+       _storageSizeLoader = storageSizeLoader;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  bool _hasLoaded = false;
+  bool get hasLoaded => _hasLoaded;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -81,10 +82,11 @@ class ProfileViewModel extends ChangeNotifier {
         _lastPeriodDate = null;
       }
 
-      _storageSizeMb = await _calculateDbSize();
+      _storageSizeMb = await (_storageSizeLoader?.call() ?? _calculateDbSize());
     } catch (e) {
       _errorMessage = 'Failed to load profile data.';
     } finally {
+      _hasLoaded = true;
       _isLoading = false;
       notifyListeners();
     }
@@ -93,7 +95,10 @@ class ProfileViewModel extends ChangeNotifier {
   Future<double> _calculateDbSize() async {
     try {
       final documentsDirectory = await getApplicationDocumentsDirectory();
-      final path = join(documentsDirectory.path, DatabaseConstants.databaseName);
+      final path = join(
+        documentsDirectory.path,
+        DatabaseConstants.databaseName,
+      );
       final file = File(path);
       if (await file.exists()) {
         final length = await file.length();
@@ -148,7 +153,9 @@ class ProfileViewModel extends ChangeNotifier {
   Future<void> updatePeriodDuration(int duration) async {
     try {
       if (_cycleSettings != null) {
-        final updated = _cycleSettings!.copyWith(averagePeriodDuration: duration);
+        final updated = _cycleSettings!.copyWith(
+          averagePeriodDuration: duration,
+        );
         await _userProfileRepository.saveCycleSettings(updated);
       } else {
         final updated = CycleSettings(

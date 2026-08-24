@@ -34,9 +34,6 @@ class HistoryViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
   List<Cycle> _cycles = [];
   List<Cycle> get cycles => _cycles;
 
@@ -89,7 +86,6 @@ class HistoryViewModel extends ChangeNotifier {
 
   Future<void> loadHistory() async {
     _isLoading = true;
-    _errorMessage = null;
     notifyListeners();
 
     try {
@@ -98,8 +94,6 @@ class HistoryViewModel extends ChangeNotifier {
       _reports = await _reportRepository.getReports();
       _analysisResults = await _checkUpRepository.getAnalysisResults();
       await _loadCycleContext();
-    } catch (e) {
-      _errorMessage = 'Failed to load history data.';
     } finally {
       _isLoading = false;
       notifyListeners();

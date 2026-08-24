@@ -144,8 +144,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   final profileVM = ProfileViewModel(
                     di.userProfileRepository,
                     di.backupRepository,
-                    checkUpRepository: di.checkUpRepository,
                     di.cycleRepository,
+                    checkUpRepository: di.checkUpRepository,
                   );
                   profileVM.loadProfileData();
                   Navigator.push(
