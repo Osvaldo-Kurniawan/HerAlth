@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../../../domain/models/user_profile.dart';
 import '../../../../domain/repositories/backup_repository.dart';
+import '../../../../domain/repositories/check_up_repository.dart';
 import '../../../../domain/repositories/user_profile_repository.dart';
 
 class ProfileViewModel extends ChangeNotifier {
   final UserProfileRepository _userProfileRepository;
   final BackupRepository _backupRepository;
+  final CheckUpRepository? _checkUpRepository;
 
-  ProfileViewModel(this._userProfileRepository, this._backupRepository);
+  ProfileViewModel(
+    this._userProfileRepository,
+    this._backupRepository, {
+    CheckUpRepository? checkUpRepository,
+  }) : _checkUpRepository = checkUpRepository;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -25,6 +31,12 @@ class ProfileViewModel extends ChangeNotifier {
   AiSettings? _aiSettings;
   AiSettings? get aiSettings => _aiSettings;
 
+  int _checkUpCount = 0;
+  int get checkUpCount => _checkUpCount;
+
+  DateTime? _latestCheckUpDate;
+  DateTime? get latestCheckUpDate => _latestCheckUpDate;
+
   Future<void> loadProfileData() async {
     _isLoading = true;
     notifyListeners();
@@ -34,6 +46,9 @@ class ProfileViewModel extends ChangeNotifier {
       _cycleSettings = await _userProfileRepository.getCycleSettings();
       _reminderSettings = await _userProfileRepository.getReminderSettings();
       _aiSettings = await _userProfileRepository.getAiSettings();
+      final checkUps = await _checkUpRepository?.getCheckUps() ?? [];
+      _checkUpCount = checkUps.length;
+      _latestCheckUpDate = checkUps.isEmpty ? null : checkUps.first.date;
     } finally {
       _isLoading = false;
       notifyListeners();

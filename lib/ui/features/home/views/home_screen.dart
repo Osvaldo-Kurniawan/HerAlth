@@ -26,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListenableBuilder(
       listenable: widget.viewModel,
       builder: (context, _) {
-        final profile = widget.viewModel.profile;
         final settings = widget.viewModel.settings;
         final cycleHistory = widget.viewModel.cycleHistory;
 
@@ -124,8 +123,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     di.cycleRepository,
                     di.checkUpRepository,
                     di.reportRepository,
+                    userProfileRepository: di.userProfileRepository,
+                    cycleEngine: di.cycleEngine,
                   );
-                  historyVM.loadHistory();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -144,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   final profileVM = ProfileViewModel(
                     di.userProfileRepository,
                     di.backupRepository,
+                    checkUpRepository: di.checkUpRepository,
                   );
                   profileVM.loadProfileData();
                   Navigator.push(

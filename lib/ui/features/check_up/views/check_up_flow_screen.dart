@@ -1286,18 +1286,25 @@ class AnalysisOrbPainter extends CustomPainter {
 }
 
 class AnalysisResultsScreen extends StatelessWidget {
-  final CheckUpViewModel viewModel;
+  final CheckUpViewModel? viewModel;
   final CheckUpAnalysis analysis;
+  final CycleContextSnapshot? cycleContext;
+  final bool closeToRoot;
 
   const AnalysisResultsScreen({
     super.key,
-    required this.viewModel,
+    this.viewModel,
     required this.analysis,
+    this.cycleContext,
+    this.closeToRoot = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cycle = viewModel.cycleContext;
+    final cycle =
+        cycleContext ??
+        viewModel?.cycleContext ??
+        const CycleContextSnapshot.defaults();
     return Scaffold(
       backgroundColor: HerAlthColors.background,
       appBar: AppBar(
@@ -1305,8 +1312,13 @@ class AnalysisResultsScreen extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          onPressed: () =>
-              Navigator.popUntil(context, (route) => route.isFirst),
+          onPressed: () {
+            if (closeToRoot) {
+              Navigator.popUntil(context, (route) => route.isFirst);
+            } else {
+              Navigator.pop(context);
+            }
+          },
           icon: const Icon(Icons.close_rounded),
           color: HerAlthColors.ink,
         ),

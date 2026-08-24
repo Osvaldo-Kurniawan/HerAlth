@@ -38,7 +38,9 @@ class CheckUpScreen extends StatelessWidget {
                 di.cycleRepository,
                 di.checkUpRepository,
                 di.reportRepository,
-              )..loadHistory();
+                userProfileRepository: di.userProfileRepository,
+                cycleEngine: di.cycleEngine,
+              );
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -58,6 +60,7 @@ class CheckUpScreen extends StatelessWidget {
               final profileVM = ProfileViewModel(
                 di.userProfileRepository,
                 di.backupRepository,
+                checkUpRepository: di.checkUpRepository,
               )..loadProfileData();
               Navigator.push(
                 context,

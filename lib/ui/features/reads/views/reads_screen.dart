@@ -75,8 +75,9 @@ class _ReadsScreenState extends State<ReadsScreen> {
                     di.cycleRepository,
                     di.checkUpRepository,
                     di.reportRepository,
+                    userProfileRepository: di.userProfileRepository,
+                    cycleEngine: di.cycleEngine,
                   );
-                  historyVM.loadHistory();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -95,6 +96,7 @@ class _ReadsScreenState extends State<ReadsScreen> {
                   final profileVM = ProfileViewModel(
                     di.userProfileRepository,
                     di.backupRepository,
+                    checkUpRepository: di.checkUpRepository,
                   );
                   profileVM.loadProfileData();
                   Navigator.push(
