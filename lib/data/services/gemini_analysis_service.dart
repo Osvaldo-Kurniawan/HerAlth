@@ -60,6 +60,7 @@ class GeminiAnalysisService implements CheckUpAnalysisService {
   final String Function() _fallbackModelProvider;
   final Future<void> Function(Duration duration) _delay;
   final int _maxRetries;
+  final Duration _requestTimeout;
 
   GeminiAnalysisService({
     http.Client? client,
@@ -68,6 +69,7 @@ class GeminiAnalysisService implements CheckUpAnalysisService {
     String Function()? fallbackModelProvider,
     Future<void> Function(Duration duration)? delay,
     int maxRetries = 3,
+    Duration requestTimeout = const Duration(seconds: 60),
   }) : _client = client ?? http.Client(),
        _apiKeyProvider = apiKeyProvider ?? (() => AppConfig.geminiApiKey),
        _modelProvider = modelProvider ?? (() => AppConfig.geminiModel),
@@ -75,7 +77,9 @@ class GeminiAnalysisService implements CheckUpAnalysisService {
            fallbackModelProvider ?? (() => AppConfig.geminiFallbackModel),
        _delay = delay ?? ((duration) => Future<void>.delayed(duration)),
        _maxRetries = maxRetries,
-       assert(maxRetries >= 0);
+       _requestTimeout = requestTimeout,
+       assert(maxRetries >= 0),
+       assert(requestTimeout > Duration.zero);
 
   @override
   Future<CheckUpAnalysis> analyze({
@@ -185,12 +189,16 @@ class GeminiAnalysisService implements CheckUpAnalysisService {
               },
               body: body,
             )
-            .timeout(const Duration(seconds: 60));
+            .timeout(_requestTimeout);
       } on TimeoutException {
-        throw GeminiAnalysisException(
+        final failure = GeminiAnalysisException(
           'The AI request timed out. Please try again.',
+          statusCode: 408,
           model: model,
         );
+        if (attempt >= maxRetries) throw failure;
+        await _delay(Duration(seconds: 1 << attempt));
+        continue;
       } on http.ClientException catch (error) {
         throw GeminiAnalysisException(
           'The AI service could not be reached. Check your connection and try again.',

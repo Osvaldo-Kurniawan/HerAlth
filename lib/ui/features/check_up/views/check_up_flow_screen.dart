@@ -4,7 +4,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../data/services/check_up_pdf_service.dart';
 import '../../../../data/services/gemini_analysis_service.dart';
+import '../../../../domain/models/check_up.dart';
 import '../../../../domain/models/check_up_analysis.dart';
 import '../../../../domain/models/ultrasound_attachment.dart';
 import '../view_models/check_up_view_model.dart';
@@ -1142,6 +1144,7 @@ class _AnalysisProcessingScreenState extends State<AnalysisProcessingScreen>
       if (mounted) {
         setState(
           () => _error =
+              widget.viewModel.errorMessage ??
               'Something went wrong while analyzing. Please try again.',
         );
       }
@@ -1183,7 +1186,7 @@ class _AnalysisProcessingScreenState extends State<AnalysisProcessingScreen>
                 ],
                 const Spacer(),
                 const Padding(
-                  padding: EdgeInsets.only(bottom: 26),
+                  padding: EdgeInsets.fromLTRB(24, 0, 24, 26),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -1193,11 +1196,14 @@ class _AnalysisProcessingScreenState extends State<AnalysisProcessingScreen>
                         color: HerAlthColors.secondary,
                       ),
                       SizedBox(width: 8),
-                      Text(
-                        'You will get notification when analysis complete',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: HerAlthColors.secondary,
+                      Flexible(
+                        child: Text(
+                          'You will get a notification when analysis finishes',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: HerAlthColors.secondary,
+                          ),
                         ),
                       ),
                     ],
@@ -1285,25 +1291,43 @@ class AnalysisOrbPainter extends CustomPainter {
       oldDelegate.progress != progress;
 }
 
-class AnalysisResultsScreen extends StatelessWidget {
+class AnalysisResultsScreen extends StatefulWidget {
   final CheckUpViewModel? viewModel;
   final CheckUpAnalysis analysis;
   final CycleContextSnapshot? cycleContext;
+  final CheckUp? checkUp;
   final bool closeToRoot;
+  final CheckUpReportExporter? reportExporter;
 
   const AnalysisResultsScreen({
     super.key,
     this.viewModel,
     required this.analysis,
     this.cycleContext,
+    this.checkUp,
     this.closeToRoot = true,
+    this.reportExporter,
   });
+
+  @override
+  State<AnalysisResultsScreen> createState() => _AnalysisResultsScreenState();
+}
+
+class _AnalysisResultsScreenState extends State<AnalysisResultsScreen> {
+  late final CheckUpReportExporter _reportExporter;
+  bool _isExporting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _reportExporter = widget.reportExporter ?? DeviceCheckUpReportExporter();
+  }
 
   @override
   Widget build(BuildContext context) {
     final cycle =
-        cycleContext ??
-        viewModel?.cycleContext ??
+        widget.cycleContext ??
+        widget.viewModel?.cycleContext ??
         const CycleContextSnapshot.defaults();
     return Scaffold(
       backgroundColor: HerAlthColors.background,
@@ -1313,7 +1337,7 @@ class AnalysisResultsScreen extends StatelessWidget {
         scrolledUnderElevation: 0,
         leading: IconButton(
           onPressed: () {
-            if (closeToRoot) {
+            if (widget.closeToRoot) {
               Navigator.popUntil(context, (route) => route.isFirst);
             } else {
               Navigator.pop(context);
@@ -1325,13 +1349,13 @@ class AnalysisResultsScreen extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: 'Share',
-            onPressed: () => _showComingSoon(context),
+            onPressed: _isExporting ? null : () => _sharePdf(cycle),
             icon: const Icon(Icons.ios_share_outlined),
             color: HerAlthColors.ink,
           ),
           IconButton(
             tooltip: 'Download',
-            onPressed: () => _showComingSoon(context),
+            onPressed: _isExporting ? null : () => _downloadPdf(cycle),
             icon: const Icon(Icons.download_outlined),
             color: HerAlthColors.ink,
           ),
@@ -1347,21 +1371,21 @@ class AnalysisResultsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _ResultSummary(analysis: analysis),
+                  _ResultSummary(analysis: widget.analysis),
                   const SizedBox(height: 28),
                   const Text(
                     'WHAT HERALTH OBSERVED',
                     style: HerAlthTextStyles.section,
                   ),
                   const SizedBox(height: 15),
-                  _ObservedCard(signals: analysis.observedSignals),
+                  _ObservedCard(signals: widget.analysis.observedSignals),
                   const SizedBox(height: 28),
                   const Text(
                     'POSSIBLE EXPLANATIONS',
                     style: HerAlthTextStyles.section,
                   ),
                   const SizedBox(height: 15),
-                  ...analysis.possibleExplanations.map(
+                  ...widget.analysis.possibleExplanations.map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: _ExplanationCard(explanation: item),
@@ -1385,12 +1409,43 @@ class AnalysisResultsScreen extends StatelessWidget {
     );
   }
 
-  void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Your private report is ready to revisit from History.'),
-      ),
+  CheckUpReportData _reportData(CycleContextSnapshot cycle) {
+    return CheckUpReportData(
+      analysis: widget.analysis,
+      cycleContext: cycle,
+      checkUp: widget.checkUp ?? widget.viewModel?.lastAnalyzedCheckUp,
     );
+  }
+
+  Future<void> _sharePdf(CycleContextSnapshot cycle) async {
+    setState(() => _isExporting = true);
+    try {
+      await _reportExporter.share(_reportData(cycle));
+    } on Exception {
+      if (!mounted) return;
+      _showMessage('Unable to share the PDF. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  Future<void> _downloadPdf(CycleContextSnapshot cycle) async {
+    setState(() => _isExporting = true);
+    try {
+      final path = await _reportExporter.download(_reportData(cycle));
+      if (!mounted || path == null) return;
+      _showMessage('PDF saved to $path');
+    } on Exception {
+      if (!mounted) return;
+      _showMessage('Unable to save the PDF. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -1618,9 +1673,7 @@ class _CycleChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lengths = cycle.cycleLengths.isEmpty
-        ? const [28]
-        : cycle.cycleLengths;
+    final lengths = cycle.cycleLengths.take(6).toList();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 18),
@@ -1634,46 +1687,61 @@ class _CycleChart extends StatelessWidget {
         children: [
           const Text('CYCLE LENGTH (DAYS)', style: HerAlthTextStyles.section),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 104,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: lengths.take(6).map((length) {
-                final height = 36 + ((length - 24).clamp(0, 12) * 4).toDouble();
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 4,
-                      height: height,
-                      decoration: BoxDecoration(
-                        color: HerAlthColors.rose,
-                        borderRadius: BorderRadius.circular(3),
+          if (lengths.isEmpty)
+            const SizedBox(
+              height: 72,
+              child: Center(
+                child: Text(
+                  'No cycle history recorded yet.',
+                  style: HerAlthTextStyles.cardBody,
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              height: 104,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: lengths.asMap().entries.map((entry) {
+                  final height =
+                      36 + ((entry.value - 24).clamp(0, 12) * 4).toDouble();
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${entry.value}',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: HerAlthColors.muted,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _monthLabel(lengths.indexOf(length)),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: HerAlthColors.muted,
+                      const SizedBox(height: 3),
+                      Container(
+                        width: 4,
+                        height: height,
+                        decoration: BoxDecoration(
+                          color: HerAlthColors.rose,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              }).toList(),
+                      const SizedBox(height: 8),
+                      Text(
+                        'C${entry.key + 1}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: HerAlthColors.muted,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
-          ),
           const Divider(color: HerAlthColors.divider, height: 1),
         ],
       ),
     );
-  }
-
-  String _monthLabel(int index) {
-    const months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
-    return months[index % months.length];
   }
 }
 

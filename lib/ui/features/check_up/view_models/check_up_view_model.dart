@@ -7,28 +7,37 @@ import '../../../../core/validation/ultrasound_validator.dart';
 import '../../../../data/services/gemini_analysis_service.dart';
 import '../../../../domain/models/check_up.dart';
 import '../../../../domain/models/check_up_analysis.dart';
-import '../../../../domain/models/cycle.dart';
 import '../../../../domain/models/ultrasound_attachment.dart';
+import '../../../../domain/models/user_profile.dart';
 import '../../../../domain/repositories/check_up_repository.dart';
 import '../../../../domain/repositories/cycle_repository.dart';
 import '../../../../domain/repositories/user_profile_repository.dart';
+import '../../../../domain/services/analysis_notification_service.dart';
 import '../../../../domain/services/check_up_analysis_service.dart';
+import '../../../../domain/services/cycle_context_service.dart';
 
 class CheckUpViewModel extends ChangeNotifier {
   final CheckUpRepository _checkUpRepository;
   final CycleRepository? cycleRepository;
   final UserProfileRepository? userProfileRepository;
   final CheckUpAnalysisService _analysisService;
+  final AnalysisNotificationService _notificationService;
   final UltrasoundValidator _ultrasoundValidator;
+  final CycleContextService _cycleContextService;
 
   CheckUpViewModel(
     this._checkUpRepository, {
     this.cycleRepository,
     this.userProfileRepository,
     CheckUpAnalysisService? analysisService,
+    AnalysisNotificationService? notificationService,
     UltrasoundValidator? ultrasoundValidator,
+    CycleContextService? cycleContextService,
   }) : _analysisService = analysisService ?? GeminiAnalysisService(),
-       _ultrasoundValidator = ultrasoundValidator ?? UltrasoundValidator();
+       _notificationService =
+           notificationService ?? const NoopAnalysisNotificationService(),
+       _ultrasoundValidator = ultrasoundValidator ?? UltrasoundValidator(),
+       _cycleContextService = cycleContextService ?? CycleContextService();
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -53,6 +62,9 @@ class CheckUpViewModel extends ChangeNotifier {
 
   CheckUpAnalysis? _analysis;
   CheckUpAnalysis? get analysis => _analysis;
+
+  CheckUp? _lastAnalyzedCheckUp;
+  CheckUp? get lastAnalyzedCheckUp => _lastAnalyzedCheckUp;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -119,33 +131,28 @@ class CheckUpViewModel extends ChangeNotifier {
     _notes = '';
     _ultrasound = null;
     _analysis = null;
+    _lastAnalyzedCheckUp = null;
     _errorMessage = null;
     _diagnosticErrorMessage = null;
     _cycleContext = const CycleContextSnapshot.defaults();
     notifyListeners();
   }
 
-  Future<void> loadCycleContext() async {
+  Future<void> loadCycleContext({DateTime? at}) async {
     if (cycleRepository == null || userProfileRepository == null) return;
 
     try {
       final settings = await userProfileRepository!.getCycleSettings();
       final cycles = await cycleRepository!.getCycles();
-      final sorted = [...cycles]
-        ..sort((a, b) => b.startDate.compareTo(a.startDate));
-      final latest = sorted.isEmpty ? null : sorted.first;
-      final average = settings?.averageCycleLength ?? 28;
-      final cycleDay = latest == null
-          ? 13
-          : DateTime.now().difference(latest.startDate).inDays.clamp(1, 60);
-      final lengths = _cycleLengths(sorted);
-      _cycleContext = CycleContextSnapshot(
-        cycleDay: cycleDay,
-        phase: _phaseFor(cycleDay, average),
-        averageCycleLength: average,
-        lastPeriod: latest?.startDate,
-        regularity: _regularityFor(lengths),
-        cycleLengths: lengths,
+      _cycleContext = _cycleContextService.build(
+        cycles: cycles,
+        settings:
+            settings ??
+            const CycleSettings(
+              averageCycleLength: 28,
+              averagePeriodDuration: 5,
+            ),
+        at: at ?? DateTime.now(),
       );
       notifyListeners();
     } catch (_) {
@@ -195,11 +202,22 @@ class CheckUpViewModel extends ChangeNotifier {
         'Select at least one symptom first.',
       );
     }
+    if (_isAnalyzing) {
+      throw const CheckUpValidationException(
+        'An analysis is already in progress.',
+      );
+    }
 
+    final analyzedAt = DateTime.now();
     _isAnalyzing = true;
+    _analysis = null;
+    _lastAnalyzedCheckUp = null;
     _errorMessage = null;
     _diagnosticErrorMessage = null;
     notifyListeners();
+
+    final notificationsAllowed = await _requestNotificationPermission();
+    await loadCycleContext(at: analyzedAt);
 
     final checkUpId = DateTime.now().millisecondsSinceEpoch.toString();
     final symptoms = _selectedSymptoms
@@ -212,6 +230,7 @@ class CheckUpViewModel extends ChangeNotifier {
           ),
         )
         .toList();
+    var checkUpSaved = false;
     try {
       final analysis = await _analysisService.analyze(
         symptoms: selectedSymptoms,
@@ -219,32 +238,50 @@ class CheckUpViewModel extends ChangeNotifier {
         cycleContext: _cycleContext,
         ultrasound: _ultrasound,
       );
-      _analysis = analysis;
-      await _checkUpRepository.saveCheckUp(
-        CheckUp(
-          id: checkUpId,
-          date: DateTime.now(),
-          notes: _notes,
-          ultrasoundPath: _ultrasound?.name,
-          symptoms: symptoms,
-        ),
+      final analyzedCheckUp = CheckUp(
+        id: checkUpId,
+        date: analyzedAt,
+        notes: _notes,
+        ultrasoundPath: _ultrasound?.name,
+        symptoms: symptoms,
       );
+      await _checkUpRepository.saveCheckUp(analyzedCheckUp);
+      checkUpSaved = true;
       await _checkUpRepository.saveAnalysisResult(
         AnalysisResult(
           id: '$checkUpId-analysis',
           checkUpId: checkUpId,
-          resultText: jsonEncode(analysis.toJson()),
-          date: DateTime.now(),
+          resultText: jsonEncode({
+            ...analysis.toJson(),
+            'cycle_context': _cycleContext.toJson(),
+          }),
+          date: analyzedAt,
         ),
       );
+      _analysis = analysis;
+      _lastAnalyzedCheckUp = analyzedCheckUp;
+      if (notificationsAllowed) {
+        await _showCompletedNotification();
+      }
       return analysis;
     } on InvalidUltrasoundException catch (error) {
       _errorMessage = error.message;
       _diagnosticErrorMessage = null;
+      if (notificationsAllowed) await _showFailedNotification();
       rethrow;
     } on GeminiAnalysisException catch (error) {
       _errorMessage = error.message;
       _diagnosticErrorMessage = error.diagnosticMessage;
+      if (notificationsAllowed) await _showFailedNotification();
+      rethrow;
+    } on Exception catch (error) {
+      if (checkUpSaved) await _rollBackIncompleteCheckUp(checkUpId);
+      _analysis = null;
+      _lastAnalyzedCheckUp = null;
+      _errorMessage =
+          'Something went wrong while saving or analyzing. Please try again.';
+      _diagnosticErrorMessage = error.toString();
+      if (notificationsAllowed) await _showFailedNotification();
       rethrow;
     } finally {
       _isAnalyzing = false;
@@ -252,30 +289,36 @@ class CheckUpViewModel extends ChangeNotifier {
     }
   }
 
-  List<int> _cycleLengths(List<Cycle> cycles) {
-    final lengths = <int>[];
-    for (var index = 0; index + 1 < cycles.length; index++) {
-      final difference = cycles[index].startDate
-          .difference(cycles[index + 1].startDate)
-          .inDays;
-      if (difference >= 15 && difference <= 90) lengths.add(difference);
+  Future<bool> _requestNotificationPermission() async {
+    try {
+      return await _notificationService.requestPermission();
+    } on Exception {
+      return false;
     }
-    if (lengths.isEmpty) return const [27, 29, 28, 31, 26, 30];
-    return lengths.take(6).map((length) => length.clamp(15, 90)).toList();
   }
 
-  String _phaseFor(int cycleDay, int cycleLength) {
-    if (cycleDay <= 5) return 'Menstruation';
-    if (cycleDay <= (cycleLength / 2).round() - 2) return 'Follicular';
-    if (cycleDay <= (cycleLength / 2).round() + 2) return 'Ovulation';
-    return 'Luteal';
+  Future<void> _showCompletedNotification() async {
+    try {
+      await _notificationService.showAnalysisCompleted();
+    } on Exception {
+      // A notification failure must not turn a successful analysis into a failure.
+    }
   }
 
-  String _regularityFor(List<int> lengths) {
-    if (lengths.length < 2) return 'Not enough data';
-    final max = lengths.reduce((a, b) => a > b ? a : b);
-    final min = lengths.reduce((a, b) => a < b ? a : b);
-    return max - min <= 3 ? 'Regular' : 'Slightly irregular';
+  Future<void> _showFailedNotification() async {
+    try {
+      await _notificationService.showAnalysisFailed();
+    } on Exception {
+      // Preserve the original analysis failure for the processing screen.
+    }
+  }
+
+  Future<void> _rollBackIncompleteCheckUp(String checkUpId) async {
+    try {
+      await _checkUpRepository.deleteCheckUp(checkUpId);
+    } on Exception {
+      // Keep the original persistence exception as the diagnostic cause.
+    }
   }
 }
 
