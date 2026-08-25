@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heralth/domain/models/check_up.dart';
 import 'package:heralth/domain/models/cycle.dart';
@@ -11,11 +14,17 @@ import 'package:heralth/ui/features/profile/view_models/profile_view_model.dart'
 import 'package:heralth/ui/features/profile/views/profile_screen.dart';
 
 class _FakeBackupRepository implements BackupRepository {
+  String? lastRestoredPath;
+  Object? restoreError;
+
   @override
   Future<void> createBackup(String targetFilePath) async {}
 
   @override
-  Future<void> restoreBackup(String sourceFilePath) async {}
+  Future<void> restoreBackup(String sourceFilePath) async {
+    if (restoreError != null) throw restoreError!;
+    lastRestoredPath = sourceFilePath;
+  }
 }
 
 class _FakeCheckUpRepository implements CheckUpRepository {
@@ -66,8 +75,6 @@ class _FakeUserProfileRepository implements UserProfileRepository {
   @override
   Future<void> clearAllData() async {}
 
-
-
   @override
   Future<CycleSettings?> getCycleSettings() async =>
       const CycleSettings(averageCycleLength: 28, averagePeriodDuration: 5);
@@ -78,8 +85,6 @@ class _FakeUserProfileRepository implements UserProfileRepository {
   @override
   Future<UserProfile?> getUserProfile() async =>
       const UserProfile(name: 'Jane Doe', age: 28, height: 165, weight: 60);
-
-
 
   @override
   Future<void> saveCycleSettings(CycleSettings settings) async {}
@@ -92,6 +97,25 @@ class _FakeUserProfileRepository implements UserProfileRepository {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  const pathProviderChannel = MethodChannel('plugins.flutter.io/path_provider');
+
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(pathProviderChannel, (call) async {
+          if (call.method == 'getTemporaryDirectory') {
+            return Directory.systemTemp.path;
+          }
+          return null;
+        });
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(pathProviderChannel, null);
+  });
+
   testWidgets('shows locally stored profile and check-up activity', (
     WidgetTester tester,
   ) async {
@@ -123,4 +147,38 @@ void main() {
     await tester.scrollUntilVisible(find.text('LOCAL DATA'), 500);
     expect(find.text('LOCAL DATA'), findsOneWidget);
   });
+
+  test('restoreBackup writes pasted JSON to a temp file, restores via the repository, and reloads profile data', () async {
+    final backupRepository = _FakeBackupRepository();
+    final viewModel = ProfileViewModel(
+      _FakeUserProfileRepository(),
+      backupRepository,
+      _FakeCycleRepository(),
+    );
+
+    final success = await viewModel.restoreBackup('{"exportedAt": "now"}');
+
+    expect(success, isTrue);
+    expect(viewModel.errorMessage, isNull);
+    expect(backupRepository.lastRestoredPath, isNotNull);
+    expect(viewModel.hasLoaded, isTrue);
+  });
+
+  test(
+    'restoreBackup surfaces an error message and returns false on failure',
+    () async {
+      final backupRepository = _FakeBackupRepository()
+        ..restoreError = const FormatException('bad json');
+      final viewModel = ProfileViewModel(
+        _FakeUserProfileRepository(),
+        backupRepository,
+        _FakeCycleRepository(),
+      );
+
+      final success = await viewModel.restoreBackup('not json');
+
+      expect(success, isFalse);
+      expect(viewModel.errorMessage, isNotNull);
+    },
+  );
 }
