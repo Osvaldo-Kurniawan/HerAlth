@@ -47,8 +47,6 @@ class ProfileViewModel extends ChangeNotifier {
   ReminderSettings? _reminderSettings;
   ReminderSettings? get reminderSettings => _reminderSettings;
 
-
-
   int _checkUpCount = 0;
   int get checkUpCount => _checkUpCount;
 
@@ -210,6 +208,36 @@ class ProfileViewModel extends ChangeNotifier {
       _errorMessage = 'Failed to export backup.';
       notifyListeners();
       rethrow;
+    }
+  }
+
+  /// Restores a backup from pasted JSON content. Writes it to a private
+  /// temp file so the existing file-based [BackupRepository.restoreBackup]
+  /// can be reused as-is, then discards the temp file.
+  Future<bool> restoreBackup(String jsonStr) async {
+    _errorMessage = null;
+    notifyListeners();
+
+    final tempFile = File(
+      join(
+        (await getTemporaryDirectory()).path,
+        'heralth_restore_${DateTime.now().millisecondsSinceEpoch}.json',
+      ),
+    );
+
+    try {
+      await tempFile.writeAsString(jsonStr);
+      await _backupRepository.restoreBackup(tempFile.path);
+      await loadProfileData();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Failed to restore backup. Please check the backup content and try again.';
+      notifyListeners();
+      return false;
+    } finally {
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
     }
   }
 

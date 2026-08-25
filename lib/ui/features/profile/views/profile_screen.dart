@@ -1,10 +1,11 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-import '../../../../core/config/app_config.dart';
 import '../../../../core/di/service_locator.dart';
-import '../../../../domain/models/user_profile.dart';
 import '../../../core/error_state_widget.dart';
 import '../../history/view_models/history_view_model.dart';
 import '../../history/views/history_screen.dart';
@@ -1051,15 +1052,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _exportBackupFlow() async {
-    try {
-      final tempDir = await getTemporaryDirectory();
-      final path = p.join(
-        tempDir.path,
-        'heralth_backup_${DateTime.now().millisecondsSinceEpoch}.json',
-      );
-      await widget.viewModel.exportBackup(path);
+    // Backups are first written to a private temp file (existing repository
+    // contract expects a file path), then handed to the platform's native
+    // "Save As" flow so the file actually lands in a location the user can
+    // find — e.g. the real Downloads folder on Android — rather than an
+    // app-private cache dir the user can never browse to.
+    final fileName =
+        'heralth_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+    final tempPath = p.join((await getTemporaryDirectory()).path, fileName);
 
-      if (mounted) {
+    try {
+      await widget.viewModel.exportBackup(tempPath);
+      final bytes = await File(tempPath).readAsBytes();
+
+      final savedPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save HerAlth backup',
+        fileName: fileName,
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        bytes: bytes,
+      );
+
+      if (mounted && savedPath != null) {
+        // On Android/iOS the native picker returns an opaque document
+        // reference (e.g. "/document/15") rather than a real file path, so
+        // it isn't useful to show directly — the file name is what the user
+        // actually recognizes.
+        final locationText = (Platform.isAndroid || Platform.isIOS)
+            ? 'Your local backup "$fileName" has been saved to the location you chose.'
+            : 'Your local backup has been saved to:\n\n$savedPath';
+
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -1075,9 +1097,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            content: Text(
-              'Your local backup has been successfully exported to:\n\n$path',
-            ),
+            content: Text(locationText),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -1093,8 +1113,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       }
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      final tempFile = File(tempPath);
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
+    }
   }
+
+
 
   void _showClearHistoryConfirmation() {
     showModalBottomSheet(

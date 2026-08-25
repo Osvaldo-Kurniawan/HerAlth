@@ -37,7 +37,7 @@ class ReportDetailScreen extends StatelessWidget {
     if (matchedCycle != null) {
       cycleDay = checkUp.date.difference(matchedCycle.startDate).inDays + 1;
       if (cycleDay <= 0) cycleDay = 1;
-      
+
       final di = ServiceLocator.instance;
       final phase = di.cycleEngine.getPhaseForDay(cycleDay, settings);
       phaseName = _getPhaseDisplayName(phase);

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../view_models/onboarding_view_model.dart';
@@ -48,6 +51,30 @@ class _RestoreBackupViewState extends State<RestoreBackupView> {
   void dispose() {
     _jsonController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickBackupFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final content = await file.readAsString();
+        if (mounted) {
+          setState(() {
+            _jsonController.text = content;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading file: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -119,6 +146,14 @@ class _RestoreBackupViewState extends State<RestoreBackupView> {
                 runSpacing: 8,
                 alignment: WrapAlignment.spaceBetween,
                 children: [
+                  TextButton.icon(
+                    onPressed: _pickBackupFile,
+                    icon: const Icon(Icons.file_open_rounded, size: 18),
+                    label: const Text('Pick file'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF9E385A),
+                    ),
+                  ),
                   TextButton.icon(
                     onPressed: () {
                       _jsonController.text = _mockBackupJson;
