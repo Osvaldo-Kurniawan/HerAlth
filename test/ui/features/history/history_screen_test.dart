@@ -122,6 +122,14 @@ void main() {
       'signal_percent': 55,
       'observed_signals': <Object>[],
       'possible_explanations': <Object>[],
+      'cycle_context': {
+        'cycle_day': 12,
+        'phase': 'Follicular',
+        'average_cycle_length': 28,
+        'last_period': '2026-04-01T00:00:00.000',
+        'regularity': 'Regular',
+        'cycle_lengths': [28, 29, 28],
+      },
     }),
   );
 
@@ -152,6 +160,8 @@ void main() {
     );
     expect(viewModel.flaggedCount, 1);
     expect(viewModel.monthsTracked, 1);
+    expect(viewModel.cycleContextFor(checkUp).cycleDay, 12);
+    expect(viewModel.cycleContextFor(checkUp).phase, 'Follicular');
 
     viewModel.setFilter(HistoryFilter.flagged);
     expect(viewModel.filteredCheckUps, contains(checkUp));
@@ -174,6 +184,7 @@ void main() {
     expect(find.text('Apr 12'), findsOneWidget);
     expect(find.text('Fatigue'), findsOneWidget);
     expect(find.text('Attention'), findsOneWidget);
+    expect(find.text('Day 12 · Follicular phase'), findsOneWidget);
     expect(find.text('View report'), findsOneWidget);
   });
 }

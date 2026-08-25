@@ -38,6 +38,7 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
       cycleRepository: di.cycleRepository,
       userProfileRepository: di.userProfileRepository,
       analysisService: di.checkUpAnalysisService,
+      notificationService: di.analysisNotificationService,
     );
     _readsViewModel = ReadsViewModel(di.articleRepository);
 

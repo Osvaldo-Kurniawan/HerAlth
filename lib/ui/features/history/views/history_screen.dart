@@ -116,7 +116,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       child: _HistoryCard(
                         checkUp: checkUp,
                         flagged: widget.viewModel.isFlagged(checkUp),
-                        cycleContext: widget.viewModel.cycleContext,
+                        cycleContext: widget.viewModel.cycleContextFor(checkUp),
                         onViewReport: () => _viewReport(context, checkUp),
                       ),
                     ),
@@ -165,7 +165,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       MaterialPageRoute(
         builder: (_) => AnalysisResultsScreen(
           analysis: analysis,
-          cycleContext: widget.viewModel.cycleContext,
+          cycleContext: widget.viewModel.cycleContextFor(checkUp),
+          checkUp: checkUp,
           closeToRoot: false,
         ),
       ),

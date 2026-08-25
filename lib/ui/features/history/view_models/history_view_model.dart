@@ -4,14 +4,15 @@ import 'package:flutter/material.dart';
 
 import '../../../../domain/models/check_up.dart';
 import '../../../../domain/models/check_up_analysis.dart';
+import '../../../../domain/models/report.dart';
 import '../../../../domain/models/cycle.dart';
 import '../../../../domain/models/user_profile.dart';
-import '../../../../domain/models/report.dart';
 import '../../../../domain/repositories/check_up_repository.dart';
 import '../../../../domain/repositories/cycle_repository.dart';
 import '../../../../domain/repositories/report_repository.dart';
 import '../../../../domain/repositories/user_profile_repository.dart';
 import '../../../../domain/services/cycle_engine.dart';
+import '../../../../domain/services/cycle_context_service.dart';
 
 enum HistoryFilter { all, flagged, normal }
 
@@ -20,7 +21,7 @@ class HistoryViewModel extends ChangeNotifier {
   final CheckUpRepository _checkUpRepository;
   final ReportRepository _reportRepository;
   final UserProfileRepository? _userProfileRepository;
-  final CycleEngine? _cycleEngine;
+  final CycleContextService _cycleContextService;
 
   HistoryViewModel(
     this._cycleRepository,
@@ -28,8 +29,10 @@ class HistoryViewModel extends ChangeNotifier {
     this._reportRepository, {
     UserProfileRepository? userProfileRepository,
     CycleEngine? cycleEngine,
+    CycleContextService? cycleContextService,
   }) : _userProfileRepository = userProfileRepository,
-       _cycleEngine = cycleEngine;
+       _cycleContextService =
+           cycleContextService ?? CycleContextService(cycleEngine: cycleEngine);
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -101,18 +104,24 @@ class HistoryViewModel extends ChangeNotifier {
   }
 
   CheckUpAnalysis? analysisFor(String checkUpId) {
-    final result = _analysisResults.cast<AnalysisResult?>().firstWhere(
-      (item) => item?.checkUpId == checkUpId,
-      orElse: () => null,
-    );
-    if (result == null) return null;
-    try {
-      final json = jsonDecode(result.resultText);
-      if (json is! Map<String, dynamic>) return null;
-      return CheckUpAnalysis.fromJson(json, rawText: jsonEncode(json));
-    } on FormatException {
-      return null;
+    final payload = _analysisPayloadFor(checkUpId);
+    if (payload == null) return null;
+    return CheckUpAnalysis.fromJson(payload, rawText: jsonEncode(payload));
+  }
+
+  CycleContextSnapshot cycleContextFor(CheckUp checkUp) {
+    final payload = _analysisPayloadFor(checkUp.id);
+    final rawContext = payload?['cycle_context'];
+    if (rawContext is Map) {
+      return CycleContextSnapshot.fromJson(
+        Map<String, dynamic>.from(rawContext),
+      );
     }
+    return _cycleContextService.build(
+      cycles: _cycles,
+      settings: _cycleSettings,
+      at: checkUp.date,
+    );
   }
 
   bool isFlagged(CheckUp checkUp) {
@@ -123,47 +132,32 @@ class HistoryViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadCycleContext() async {
-    final settings = await _userProfileRepository?.getCycleSettings();
-    final latest = _cycles.isEmpty ? null : _cycles.first;
-    final average = settings?.averageCycleLength ?? 28;
-    final cycleDay = latest == null
-        ? 13
-        : DateTime.now().difference(latest.startDate).inDays + 1;
-    final safeCycleDay = cycleDay.clamp(1, 60);
-    final phase =
-        _cycleEngine?.getPhaseForDay(
-          safeCycleDay,
-          settings ??
-              const CycleSettings(
-                averageCycleLength: 28,
-                averagePeriodDuration: 5,
-              ),
-        ) ??
-        CyclePhase.ovulatory;
-    _cycleContext = CycleContextSnapshot(
-      cycleDay: safeCycleDay,
-      phase: _phaseLabel(phase),
-      averageCycleLength: average,
-      lastPeriod: latest?.startDate,
-      regularity: _regularityLabel(_cycles),
-      cycleLengths: _cycles
-          .map((cycle) => cycle.cycleLength)
-          .whereType<int>()
-          .toList(),
+    _cycleSettings =
+        await _userProfileRepository?.getCycleSettings() ??
+        const CycleSettings(averageCycleLength: 28, averagePeriodDuration: 5);
+    _cycleContext = _cycleContextService.build(
+      cycles: _cycles,
+      settings: _cycleSettings,
+      at: DateTime.now(),
     );
   }
 
-  String _phaseLabel(CyclePhase phase) {
-    return switch (phase) {
-      CyclePhase.menstruation => 'Menstruation',
-      CyclePhase.follicular => 'Follicular',
-      CyclePhase.ovulatory => 'Ovulation',
-      CyclePhase.luteal => 'Luteal',
-    };
-  }
+  CycleSettings _cycleSettings = const CycleSettings(
+    averageCycleLength: 28,
+    averagePeriodDuration: 5,
+  );
 
-  String _regularityLabel(List<Cycle> cycles) {
-    if (cycles.length < 3) return 'Not enough data';
-    return 'Tracked locally';
+  Map<String, dynamic>? _analysisPayloadFor(String checkUpId) {
+    final result = _analysisResults.cast<AnalysisResult?>().firstWhere(
+      (item) => item?.checkUpId == checkUpId,
+      orElse: () => null,
+    );
+    if (result == null) return null;
+    try {
+      final payload = jsonDecode(result.resultText);
+      return payload is Map<String, dynamic> ? payload : null;
+    } on FormatException {
+      return null;
+    }
   }
 }

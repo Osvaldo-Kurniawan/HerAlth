@@ -16,12 +16,35 @@ class CycleContextSnapshot {
   });
 
   const CycleContextSnapshot.defaults()
-    : cycleDay = 13,
-      phase = 'Ovulation',
+    : cycleDay = 0,
+      phase = 'Unknown',
       averageCycleLength = 28,
       lastPeriod = null,
-      regularity = 'Slightly irregular',
-      cycleLengths = const [27, 29, 28, 31, 26, 30];
+      regularity = 'Not enough data',
+      cycleLengths = const [];
+
+  factory CycleContextSnapshot.fromJson(Map<String, dynamic> json) {
+    final rawLastPeriod = json['last_period']?.toString();
+    final rawLengths = json['cycle_lengths'];
+    return CycleContextSnapshot(
+      cycleDay: _intValue(json['cycle_day'], fallback: 0).clamp(0, 90),
+      phase: _stringValue(json['phase'], fallback: 'Unknown'),
+      averageCycleLength: _intValue(
+        json['average_cycle_length'],
+        fallback: 28,
+      ).clamp(15, 90),
+      lastPeriod: rawLastPeriod == null
+          ? null
+          : DateTime.tryParse(rawLastPeriod),
+      regularity: _stringValue(json['regularity'], fallback: 'Not enough data'),
+      cycleLengths: rawLengths is List
+          ? rawLengths
+                .map((value) => _intValue(value, fallback: 0))
+                .where((value) => value >= 15 && value <= 90)
+                .toList()
+          : const [],
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -185,4 +208,8 @@ String _stringValue(Object? value, {required String fallback}) {
 int _clampPercent(Object? value) {
   final parsed = value is num ? value.round() : int.tryParse('$value') ?? 55;
   return parsed.clamp(0, 100).toInt();
+}
+
+int _intValue(Object? value, {required int fallback}) {
+  return value is num ? value.round() : int.tryParse('$value') ?? fallback;
 }

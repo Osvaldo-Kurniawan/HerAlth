@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -164,6 +165,73 @@ void main() {
       Duration(seconds: 2),
       Duration(seconds: 4),
     ]);
+  });
+
+  test(
+    'retries request timeouts and falls back to the secondary model',
+    () async {
+      final requestedModels = <String>[];
+      final delays = <Duration>[];
+      final client = MockClient((request) async {
+        requestedModels.add(request.url.pathSegments[2]);
+        if (request.url.path.contains('gemini-primary')) {
+          throw TimeoutException('simulated request timeout');
+        }
+        return _successResponse();
+      });
+      final service = GeminiAnalysisService(
+        client: client,
+        apiKeyProvider: () => 'test-key',
+        modelProvider: () => 'gemini-primary',
+        fallbackModelProvider: () => 'gemini-3.5-flash',
+        maxRetries: 3,
+        requestTimeout: const Duration(milliseconds: 1),
+        delay: (duration) async => delays.add(duration),
+      );
+
+      final result = await _analyze(service, cycle);
+
+      expect(result.headline, 'Patterns worth discussing');
+      expect(requestedModels, const <String>[
+        'gemini-primary:generateContent',
+        'gemini-primary:generateContent',
+        'gemini-primary:generateContent',
+        'gemini-primary:generateContent',
+        'gemini-3.5-flash:generateContent',
+      ]);
+      expect(delays, const <Duration>[
+        Duration(seconds: 1),
+        Duration(seconds: 2),
+        Duration(seconds: 4),
+      ]);
+    },
+  );
+
+  test('reports an exhausted timeout as retryable HTTP 408', () async {
+    var requestCount = 0;
+    final client = MockClient((_) async {
+      requestCount++;
+      throw TimeoutException('simulated request timeout');
+    });
+    final service = GeminiAnalysisService(
+      client: client,
+      apiKeyProvider: () => 'test-key',
+      modelProvider: () => 'gemini-primary',
+      fallbackModelProvider: () => 'gemini-primary',
+      maxRetries: 1,
+      requestTimeout: const Duration(milliseconds: 1),
+      delay: (_) async {},
+    );
+
+    await expectLater(
+      _analyze(service, cycle),
+      throwsA(
+        isA<GeminiAnalysisException>()
+            .having((error) => error.statusCode, 'statusCode', 408)
+            .having((error) => error.isRetryable, 'isRetryable', isTrue),
+      ),
+    );
+    expect(requestCount, 2);
   });
 
   test('does not retry or fallback for a non-retryable status', () async {

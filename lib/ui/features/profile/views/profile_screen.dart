@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-import '../../../../core/config/app_config.dart';
 import '../../../../core/di/service_locator.dart';
-import '../../../../domain/models/user_profile.dart';
 import '../../../core/error_state_widget.dart';
 import '../../history/view_models/history_view_model.dart';
 import '../../history/views/history_screen.dart';
