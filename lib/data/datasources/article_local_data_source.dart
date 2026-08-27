@@ -55,6 +55,54 @@ class ArticleLocalDataSourceImpl implements ArticleLocalDataSource {
       category: ArticleCategory.general,
       tags: ['Sleep', 'Hormones', 'Wellness'],
     ),
+    Article(
+      id: '7',
+      title: 'Eating for Your Cycle: A Phase-by-Phase Guide',
+      summary: 'Your nutritional needs shift across your cycle. Learn what to eat during each phase to support energy and hormone balance.',
+      contentPath: 'assets/content/cycle_syncing_nutrition.md',
+      category: ArticleCategory.nutrition,
+      tags: ['Nutrition', 'Cycle Syncing', 'Energy'],
+    ),
+    Article(
+      id: '8',
+      title: 'Iron and Your Period: Why It Matters',
+      summary: 'Menstrual blood loss can lower iron stores. Discover the signs of low iron and the best food sources to replenish it.',
+      contentPath: 'assets/content/iron_and_period.md',
+      category: ArticleCategory.nutrition,
+      tags: ['Iron', 'Nutrition', 'Energy'],
+    ),
+    Article(
+      id: '9',
+      title: 'Foods That Help Ease Bloating',
+      summary: 'Cyclical bloating is common, especially before your period. Here is how food choices can reduce water retention and discomfort.',
+      contentPath: 'assets/content/bloating_foods.md',
+      category: ArticleCategory.nutrition,
+      tags: ['Bloating', 'Nutrition', 'Digestion'],
+    ),
+    Article(
+      id: '10',
+      title: 'Hydration and Your Menstrual Health',
+      summary: 'Water intake affects cramps, energy, and bloating. Learn how much to drink and how hydration changes across your cycle.',
+      contentPath: 'assets/content/hydration.md',
+      category: ArticleCategory.nutrition,
+      tags: ['Hydration', 'Nutrition', 'Self-Care'],
+    ),
+    Article(
+      id: '11',
+      title: 'Caffeine, Sugar, and Your Cycle',
+      summary: 'Cravings spike in the luteal phase for a reason. Understand how caffeine and sugar interact with your hormones.',
+      contentPath: 'assets/content/caffeine_sugar_cycle.md',
+      category: ArticleCategory.nutrition,
+      tags: ['Caffeine', 'Sugar', 'Nutrition'],
+    ),
+    Article(
+      id: '12',
+      title: 'Building a Cycle-Friendly Plate',
+      summary: 'A simple, practical framework for balanced meals that support steady energy and mood throughout your cycle.',
+      contentPath: 'assets/content/cycle_friendly_plate.md',
+      category: ArticleCategory.nutrition,
+      tags: ['Meal Planning', 'Nutrition', 'Balance'],
+    ),
   ];
 
   @override
@@ -196,6 +244,122 @@ Have you ever noticed that you sleep beautifully in some weeks, but struggle to 
 1. **Cool Temperature:** Keep your bedroom cool, especially during the luteal phase when core body temperature rises.
 2. **Limit Evening Screens:** Blue light suppresses melatonin, which is already affected by hormonal shifts.
 3. **Calming Bedtime Routine:** Warm baths, herbal tea, and reading help ease transition into sleep.
+''';
+        break;
+
+      case '7':
+        markdown = '''# Eating for Your Cycle: A Phase-by-Phase Guide
+
+Your body's energy and nutrient needs are not static—they shift as hormones rise and fall across your cycle. Eating in tune with these phases can help smooth out energy dips and cravings.
+
+## Menstrual Phase (Days 1–5)
+Estrogen and progesterone are at their lowest. Focus on iron-rich foods like leafy greens, lentils, and lean meats to help replace what is lost, along with warming, easy-to-digest meals like soups and stews.
+
+## Follicular Phase (Days 1–13)
+Rising estrogen often brings more energy. This is a great window for lighter, fresh foods—salads, sprouted grains, and fermented foods—that support gut health and complement your increasing vitality.
+
+## Ovulatory Phase (Around Day 14)
+Energy and metabolism peak. Support this phase with fiber-rich vegetables and antioxidant-dense fruits like berries, which help your body clear the extra estrogen produced during ovulation.
+
+## Luteal Phase (Days 15–28)
+Progesterone rises, and cravings for carbohydrates and sugar are common as serotonin dips. Complex carbohydrates (sweet potatoes, oats, brown rice) paired with magnesium-rich foods like nuts and dark chocolate can help stabilize mood and blood sugar.
+''';
+        break;
+
+      case '8':
+        markdown = '''# Iron and Your Period: Why It Matters
+
+Iron is one of the nutrients most affected by menstruation. Every cycle, blood loss carries iron out of the body, and for some people this can add up to a meaningful deficit over time.
+
+## Why Periods Deplete Iron
+Iron is a core component of hemoglobin, the protein that carries oxygen in your blood. Heavier or longer periods mean more iron lost, which is why people with heavy menstrual bleeding are at higher risk of iron-deficiency anemia.
+
+## Signs Your Iron May Be Low
+- Persistent fatigue, even after a full night's sleep
+- Pale skin, brittle nails, or hair thinning
+- Dizziness, shortness of breath, or difficulty concentrating
+
+## Food Sources to Prioritize
+- **Heme iron (easier to absorb):** red meat, poultry, fish
+- **Non-heme iron:** lentils, beans, tofu, spinach, fortified cereals
+- **Absorption boosters:** pair iron-rich meals with vitamin C sources like citrus, bell peppers, or tomatoes
+
+If fatigue or heavy bleeding persists, it is worth discussing iron levels with a healthcare professional rather than self-treating with high-dose supplements.
+''';
+        break;
+
+      case '9':
+        markdown = '''# Foods That Help Ease Bloating
+
+Bloating in the days before your period is extremely common, driven largely by hormonal shifts that affect how your body handles water and sodium. What you eat can meaningfully change how you feel.
+
+## Why Bloating Happens
+As progesterone rises in the luteal phase, digestion can slow down, and the body tends to retain more water and sodium. This combination often shows up as a feeling of fullness, puffiness, or tightness around the abdomen.
+
+## Foods That Can Help
+- **Potassium-rich foods:** bananas, avocados, and sweet potatoes help balance sodium levels
+- **Cucumber and watermelon:** high water content supports natural fluid balance
+- **Ginger and peppermint tea:** traditionally used to ease digestive discomfort and gas
+
+## What to Minimize
+Highly processed and salty foods can worsen water retention. Alcohol and carbonated drinks may also add to that bloated feeling right before your period. Simple swaps—like sparkling water for soda—can make a noticeable difference.
+''';
+        break;
+
+      case '10':
+        markdown = '''# Hydration and Your Menstrual Health
+
+It is easy to overlook water as a factor in period symptoms, but hydration plays a real role in cramps, energy levels, and even bloating.
+
+## Hydration and Cramps
+Dehydration can make uterine muscles contract more intensely, which may worsen cramping. Staying consistently hydrated helps muscles function smoothly and can take some edge off period pain.
+
+## Hydration and Energy
+Even mild dehydration is linked to fatigue and difficulty concentrating—symptoms that can overlap with normal cycle-related tiredness, making it harder to tell what is causing low energy.
+
+## A Simple Approach
+- Aim for steady water intake throughout the day rather than large amounts at once
+- Herbal teas (like ginger or chamomile) count toward your fluids and can be soothing
+- Water-rich foods—cucumbers, oranges, soups—also contribute to daily hydration
+
+Counterintuitively, drinking enough water can help reduce the water retention that causes bloating, since the body is less likely to hold onto extra fluid when it is consistently hydrated.
+''';
+        break;
+
+      case '11':
+        markdown = '''# Caffeine, Sugar, and Your Cycle
+
+Cravings for coffee and sweets often intensify in the days leading up to your period. Understanding why can help you make choices that feel good rather than fighting the cravings entirely.
+
+## Why Cravings Increase
+In the luteal phase, serotonin—a mood-regulating neurotransmitter—naturally dips. Sugar can trigger a quick, temporary serotonin boost, which is part of why sweet cravings tend to cluster before your period.
+
+## Caffeine's Double Edge
+Caffeine can offer a short-term energy lift, but it may also heighten anxiety, disrupt sleep, and, for some people, intensify breast tenderness and cramps by constricting blood vessels.
+
+## Finding a Middle Ground
+- Pair sweet cravings with protein or fiber (like fruit with nut butter) to soften blood sugar spikes
+- Consider swapping a late-day coffee for a lower-caffeine option like green tea
+- Complex carbohydrates can satisfy a craving for something comforting while providing more stable energy than refined sugar
+''';
+        break;
+
+      case '12':
+        markdown = '''# Building a Cycle-Friendly Plate
+
+Rather than following a strict diet, a simple, repeatable meal structure can help keep energy, mood, and digestion steadier across your whole cycle.
+
+## The Basic Framework
+1. **Protein:** a palm-sized portion (eggs, fish, tofu, legumes) to support satiety and stable blood sugar.
+2. **Complex carbohydrates:** whole grains, sweet potatoes, or quinoa for sustained energy.
+3. **Healthy fats:** avocado, olive oil, nuts, or seeds to support hormone production.
+4. **Colorful vegetables:** at least half the plate, for fiber and micronutrients.
+
+## Adjusting Through the Month
+This framework does not need to change dramatically phase to phase—small tweaks are enough. Lean more on iron-rich proteins during your period, lighter proteins and fresh produce during the follicular phase, and a bit more complex carbohydrate during the luteal phase to meet rising energy needs.
+
+## Keep It Realistic
+Consistency matters more than perfection. A cycle-friendly plate is meant to be a flexible guide, not a rigid rulebook—the goal is steadier energy and fewer extreme cravings, not restriction.
 ''';
         break;
 

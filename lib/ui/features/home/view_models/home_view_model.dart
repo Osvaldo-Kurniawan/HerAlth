@@ -62,4 +62,48 @@ class HomeViewModel extends ChangeNotifier {
     await _cycleRepository.saveCycle(newCycle);
     await loadDashboard();
   }
+
+  /// Whether the current (most recent) cycle has reached or passed its
+  /// predicted length without an end-of-cycle check-in yet. Derived from
+  /// persisted cycle/settings state so it stays correct across app restarts.
+  bool get isEndOfCycleCheckInDue {
+    if (_cycleHistory.isEmpty || _settings == null) return false;
+
+    final lastCycle = _cycleHistory.first;
+    if (lastCycle.endDate != null) return false;
+
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final start = DateTime(
+      lastCycle.startDate.year,
+      lastCycle.startDate.month,
+      lastCycle.startDate.day,
+    );
+    final currentDay = todayDate.difference(start).inDays + 1;
+
+    return currentDay >= _settings!.averageCycleLength;
+  }
+
+  /// Confirms the current cycle has ended, persisting its actual length
+  /// via the existing cycle repository (upsert by id).
+  Future<void> completeEndOfCycleCheckIn(DateTime endDate) async {
+    if (_cycleHistory.isEmpty) return;
+
+    final lastCycle = _cycleHistory.first;
+    final normalizedEnd = DateTime(endDate.year, endDate.month, endDate.day);
+    final start = DateTime(
+      lastCycle.startDate.year,
+      lastCycle.startDate.month,
+      lastCycle.startDate.day,
+    );
+    final length = normalizedEnd.difference(start).inDays + 1;
+
+    await _cycleRepository.saveCycle(
+      lastCycle.copyWith(
+        endDate: normalizedEnd,
+        cycleLength: length < 1 ? 1 : length,
+      ),
+    );
+    await loadDashboard();
+  }
 }

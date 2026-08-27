@@ -8,6 +8,8 @@ import '../../profile/view_models/profile_view_model.dart';
 import '../../profile/views/profile_screen.dart';
 import '../../history/view_models/history_view_model.dart';
 import '../../history/views/history_screen.dart';
+import '../../check_up/views/check_up_flow_screen.dart'
+    show HerAlthColors, HerAlthTextStyles;
 import '../../../../domain/models/cycle.dart';
 import '../../../../domain/models/user_profile.dart';
 
@@ -28,6 +30,17 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, _) {
         final settings = widget.viewModel.settings;
         final cycleHistory = widget.viewModel.cycleHistory;
+
+        final today = DateTime.now();
+        final alreadyLoggedStartToday = cycleHistory.isNotEmpty &&
+            cycleHistory.first.startDate.year == today.year &&
+            cycleHistory.first.startDate.month == today.month &&
+            cycleHistory.first.startDate.day == today.day;
+        final alreadyLoggedEndToday = cycleHistory.isNotEmpty &&
+            cycleHistory.first.endDate != null &&
+            cycleHistory.first.endDate!.year == today.year &&
+            cycleHistory.first.endDate!.month == today.month &&
+            cycleHistory.first.endDate!.day == today.day;
 
         if (widget.viewModel.isLoading && cycleHistory.isEmpty) {
           return const Scaffold(
@@ -60,8 +73,9 @@ class _HomeScreenState extends State<HomeScreen> {
           final diff = todayDate.difference(start).inDays;
 
           currentDay = diff + 1;
-          if (currentDay <= 0)
+          if (currentDay <= 0) {
             currentDay = 1; // Safeguard if user picks future date
+          }
 
           progress = (currentDay / cycleLength).clamp(0.0, 1.0);
 
@@ -102,13 +116,13 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: const Color(0xFFFCF5F5),
             elevation: 0,
             scrolledUnderElevation: 0,
-            title: Text(
+            title: const Text(
               'HerAlth',
               style: TextStyle(
                 fontFamily: 'serif',
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFF9E385A),
+                color: Color(0xFF9E385A),
               ),
             ),
             actions: [
@@ -290,47 +304,231 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Today is the Day Action Button
-                  ElevatedButton(
-                    onPressed: () async {
-                      final today = DateTime.now();
-                      await widget.viewModel.logPeriodStart(today);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Period logged for today successfully!',
-                            ),
-                            backgroundColor: Color(0xFF9E385A),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF9E385A),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      minimumSize: const Size.fromHeight(56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
+                  // Log Cycle Dates
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF9E385A).withOpacity(0.02),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.water_drop_rounded, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Today is the day',
+                        const Text(
+                          'LOG CYCLE DATES',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                            color: Color(0xFF8E8E8E),
                           ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: alreadyLoggedStartToday
+                                    ? null
+                                    : () => _selectAndLogPeriodStart(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF9E385A),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  minimumSize: const Size.fromHeight(50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.water_drop_rounded, size: 18),
+                                label: Text(
+                                  alreadyLoggedStartToday
+                                      ? 'Logged (Log tomorrow)'
+                                      : 'Log Start',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                              ),
+                            ),
+                            if (cycleHistory.isNotEmpty && (cycleHistory.first.endDate == null || alreadyLoggedEndToday)) ...[
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: alreadyLoggedEndToday
+                                      ? null
+                                      : () => _selectAndLogPeriodEnd(context),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFF9E385A),
+                                    side: const BorderSide(color: Color(0xFF9E385A)),
+                                    minimumSize: const Size.fromHeight(50),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.event_available_rounded, size: 18),
+                                  label: Text(
+                                    alreadyLoggedEndToday
+                                        ? 'Logged today'
+                                        : 'Log End',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  // Cycle Summary Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF9E385A).withOpacity(0.02),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'CYCLE SUMMARY',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                            color: Color(0xFF8E8E8E),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildSummaryStat(
+                              label: 'Average Cycle',
+                              value: settings != null ? '${settings.averageCycleLength} days' : '28 days',
+                            ),
+                            Container(width: 1, height: 32, color: const Color(0xFFF2ECEC)),
+                            _buildSummaryStat(
+                              label: 'Average Period',
+                              value: settings != null ? '${settings.averagePeriodDuration} days' : '5 days',
+                            ),
+                            Container(width: 1, height: 32, color: const Color(0xFFF2ECEC)),
+                            _buildSummaryStat(
+                              label: 'Cycles Logged',
+                              value: '${cycleHistory.length}',
+                            ),
+                          ],
+                        ),
+                        if (cycleHistory.isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          const Divider(color: Color(0xFFF2ECEC), height: 1),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'RECENT CYCLES',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                              color: Color(0xFF8E8E8E),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: min(cycleHistory.length, 3),
+                            separatorBuilder: (context, index) => const Divider(color: Color(0xFFFCF5F5), height: 1),
+                            itemBuilder: (context, index) {
+                              final cycle = cycleHistory[index];
+                              final isCurrent = index == 0 && cycle.endDate == null;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          cycle.endDate != null
+                                              ? '${_formatDateShort(cycle.startDate)} - ${_formatDateShort(cycle.endDate!)}'
+                                              : '${_formatDateShort(cycle.startDate)} - Present',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF2C2C2C),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          isCurrent ? 'Active Cycle' : 'Flow: ${cycle.flowIntensity}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFF8E8E8E),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: isCurrent ? const Color(0xFFFCF0F0) : const Color(0xFFF2ECEC),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        cycle.cycleLength != null
+                                            ? '${cycle.cycleLength} days'
+                                            : 'Day ${DateTime.now().difference(cycle.startDate).inDays + 1}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: isCurrent ? const Color(0xFF9E385A) : const Color(0xFF6E6E6E),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 16),
+                          const Center(
+                            child: Text(
+                              'No cycle history found.',
+                              style: TextStyle(fontSize: 13, color: Color(0xFF8E8E8E)),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // End of Cycle Check-In — distinct from the regular
+                  // "Today is the day" action, surfaced only once the
+                  // current cycle has reached its predicted length.
+                  if (widget.viewModel.isEndOfCycleCheckInDue) ...[
+                    _EndOfCycleCheckInCard(
+                      onCheckIn: () => _showEndOfCycleCheckIn(context),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
 
                   // Insight Card
                   if (currentInsight != null)
@@ -411,6 +609,80 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showEndOfCycleCheckIn(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(28.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Log your cycle\'s end date',
+                  style: TextStyle(
+                    fontFamily: 'serif',
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: HerAlthColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Save today as the end date for this cycle so HerAlth can keep your history and predictions accurate. This is separate from logging a new period start date.',
+                  style: HerAlthTextStyles.body,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(sheetContext);
+                    await widget.viewModel.completeEndOfCycleCheckIn(
+                      DateTime.now(),
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('End date saved for this cycle.'),
+                          backgroundColor: HerAlthColors.rose,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: HerAlthColors.rose,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    minimumSize: const Size.fromHeight(56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                  child: const Text(
+                    'Save end date',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: const Text(
+                    'Not yet',
+                    style: TextStyle(color: HerAlthColors.muted),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   String _getPhaseDisplayName(CyclePhase phase) {
     switch (phase) {
       case CyclePhase.menstruation:
@@ -422,6 +694,179 @@ class _HomeScreenState extends State<HomeScreen> {
       case CyclePhase.luteal:
         return 'Luteal phase';
     }
+  }
+
+  String _formatDateShort(DateTime date) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}';
+  }
+
+  Future<void> _selectAndLogPeriodStart(BuildContext context) async {
+    final today = DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: today,
+      firstDate: today.subtract(const Duration(days: 90)),
+      lastDate: today,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF9E385A),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF2C2C2C),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (pickedDate != null) {
+      await widget.viewModel.logPeriodStart(pickedDate);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Start date saved — ${_formatDateShort(pickedDate)} logged as the first day of your period.',
+            ),
+            backgroundColor: const Color(0xFF9E385A),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _selectAndLogPeriodEnd(BuildContext context) async {
+    if (widget.viewModel.cycleHistory.isEmpty) return;
+    final lastCycle = widget.viewModel.cycleHistory.first;
+    final today = DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: today,
+      firstDate: lastCycle.startDate,
+      lastDate: today,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF9E385A),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF2C2C2C),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (pickedDate != null) {
+      await widget.viewModel.completeEndOfCycleCheckIn(pickedDate);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('End date saved: ${_formatDateShort(pickedDate)}.'),
+            backgroundColor: const Color(0xFF9E385A),
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildSummaryStat({required String label, required String value}) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2C2C2C),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E8E)),
+        ),
+      ],
+    );
+  }
+}
+
+class _EndOfCycleCheckInCard extends StatelessWidget {
+  final VoidCallback onCheckIn;
+
+  const _EndOfCycleCheckInCard({required this.onCheckIn});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: HerAlthColors.rose.withOpacity(0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 22,
+            backgroundColor: HerAlthColors.palePink,
+            child: Icon(
+              Icons.event_available_rounded,
+              color: HerAlthColors.rose,
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'End of cycle reached',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: HerAlthColors.ink,
+                  ),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  'Save this cycle\'s end date to close it out.',
+                  style: HerAlthTextStyles.cardBody,
+                ),
+              ],
+            ),
+          ),
+          OutlinedButton(
+            onPressed: onCheckIn,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: HerAlthColors.rose,
+              side: const BorderSide(color: HerAlthColors.rose),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            child: const Text('Log end date'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
