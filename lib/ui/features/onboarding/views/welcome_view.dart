@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../core/partner_logos.dart';
 import '../view_models/onboarding_view_model.dart';
 
 class WelcomeView extends StatefulWidget {
@@ -111,6 +112,9 @@ class _WelcomeViewState extends State<WelcomeView>
 
   @override
   Widget build(BuildContext context) {
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final ringScale = (viewportWidth / 390).clamp(0.82, 1.0).toDouble();
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFF6F6),
       body: SafeArea(
@@ -134,36 +138,42 @@ class _WelcomeViewState extends State<WelcomeView>
                       _innerScale.value + (0.02 * interaction);
 
                   return Center(
-                    child: Transform.rotate(
-                      angle: _groupRotation.value,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Outer Ring
-                          Transform.translate(
-                            offset: Offset(0, _outerY.value),
-                            child: Transform.scale(
-                              scale: currentOuterScale,
-                              child: _buildRing(size: 320),
-                            ),
+                    child: Transform.translate(
+                      offset: Offset(0, -76 * ringScale),
+                      child: Transform.scale(
+                        scale: ringScale,
+                        child: Transform.rotate(
+                          angle: _groupRotation.value,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Outer Ring
+                              Transform.translate(
+                                offset: Offset(0, _outerY.value),
+                                child: Transform.scale(
+                                  scale: currentOuterScale,
+                                  child: _buildRing(size: 270),
+                                ),
+                              ),
+                              // Middle Ring
+                              Transform.translate(
+                                offset: Offset(_middleX.value, _middleY.value),
+                                child: Transform.scale(
+                                  scale: currentMiddleScale,
+                                  child: _buildRing(size: 190),
+                                ),
+                              ),
+                              // Inner Ring
+                              Transform.translate(
+                                offset: Offset(0, _innerY.value),
+                                child: Transform.scale(
+                                  scale: currentInnerScale,
+                                  child: _buildRing(size: 114),
+                                ),
+                              ),
+                            ],
                           ),
-                          // Middle Ring
-                          Transform.translate(
-                            offset: Offset(_middleX.value, _middleY.value),
-                            child: Transform.scale(
-                              scale: currentMiddleScale,
-                              child: _buildRing(size: 230),
-                            ),
-                          ),
-                          // Inner Ring
-                          Transform.translate(
-                            offset: Offset(0, _innerY.value),
-                            child: Transform.scale(
-                              scale: currentInnerScale,
-                              child: _buildRing(size: 140),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   );
@@ -180,13 +190,8 @@ class _WelcomeViewState extends State<WelcomeView>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 24),
-                  // Moon Icon Outline (Pink/Red)
-                  const Icon(
-                    Icons.nightlight_round_outlined,
-                    size: 36,
-                    color: Color(0xFFD6708A),
-                  ),
+                  const SizedBox(height: 12),
+                  const WelcomeBrandRow(),
                   const Spacer(),
                   // Headline (Serif style matching mock)
                   const Text(

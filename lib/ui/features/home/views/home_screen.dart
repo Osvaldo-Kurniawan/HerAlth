@@ -32,11 +32,13 @@ class _HomeScreenState extends State<HomeScreen> {
         final cycleHistory = widget.viewModel.cycleHistory;
 
         final today = DateTime.now();
-        final alreadyLoggedStartToday = cycleHistory.isNotEmpty &&
+        final alreadyLoggedStartToday =
+            cycleHistory.isNotEmpty &&
             cycleHistory.first.startDate.year == today.year &&
             cycleHistory.first.startDate.month == today.month &&
             cycleHistory.first.startDate.day == today.day;
-        final alreadyLoggedEndToday = cycleHistory.isNotEmpty &&
+        final alreadyLoggedEndToday =
+            cycleHistory.isNotEmpty &&
             cycleHistory.first.endDate != null &&
             cycleHistory.first.endDate!.year == today.year &&
             cycleHistory.first.endDate!.month == today.month &&
@@ -347,16 +349,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                     borderRadius: BorderRadius.circular(24),
                                   ),
                                 ),
-                                icon: const Icon(Icons.water_drop_rounded, size: 18),
+                                icon: const Icon(
+                                  Icons.water_drop_rounded,
+                                  size: 18,
+                                ),
                                 label: Text(
                                   alreadyLoggedStartToday
                                       ? 'Logged (Log tomorrow)'
                                       : 'Log Start',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ),
-                            if (cycleHistory.isNotEmpty && (cycleHistory.first.endDate == null || alreadyLoggedEndToday)) ...[
+                            if (cycleHistory.isNotEmpty &&
+                                (cycleHistory.first.endDate == null ||
+                                    alreadyLoggedEndToday)) ...[
                               const SizedBox(width: 12),
                               Expanded(
                                 child: OutlinedButton.icon(
@@ -365,18 +375,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                       : () => _selectAndLogPeriodEnd(context),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: const Color(0xFF9E385A),
-                                    side: const BorderSide(color: Color(0xFF9E385A)),
+                                    side: const BorderSide(
+                                      color: Color(0xFF9E385A),
+                                    ),
                                     minimumSize: const Size.fromHeight(50),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(24),
                                     ),
                                   ),
-                                  icon: const Icon(Icons.event_available_rounded, size: 18),
+                                  icon: const Icon(
+                                    Icons.event_available_rounded,
+                                    size: 18,
+                                  ),
                                   label: Text(
                                     alreadyLoggedEndToday
                                         ? 'Logged today'
                                         : 'Log End',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -420,14 +438,26 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             _buildSummaryStat(
                               label: 'Average Cycle',
-                              value: settings != null ? '${settings.averageCycleLength} days' : '28 days',
+                              value: settings != null
+                                  ? '${settings.averageCycleLength} days'
+                                  : '28 days',
                             ),
-                            Container(width: 1, height: 32, color: const Color(0xFFF2ECEC)),
+                            Container(
+                              width: 1,
+                              height: 32,
+                              color: const Color(0xFFF2ECEC),
+                            ),
                             _buildSummaryStat(
                               label: 'Average Period',
-                              value: settings != null ? '${settings.averagePeriodDuration} days' : '5 days',
+                              value: settings != null
+                                  ? '${settings.averagePeriodDuration} days'
+                                  : '5 days',
                             ),
-                            Container(width: 1, height: 32, color: const Color(0xFFF2ECEC)),
+                            Container(
+                              width: 1,
+                              height: 32,
+                              color: const Color(0xFFF2ECEC),
+                            ),
                             _buildSummaryStat(
                               label: 'Cycles Logged',
                               value: '${cycleHistory.length}',
@@ -452,17 +482,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: min(cycleHistory.length, 3),
-                            separatorBuilder: (context, index) => const Divider(color: Color(0xFFFCF5F5), height: 1),
+                            separatorBuilder: (context, index) => const Divider(
+                              color: Color(0xFFFCF5F5),
+                              height: 1,
+                            ),
                             itemBuilder: (context, index) {
                               final cycle = cycleHistory[index];
-                              final isCurrent = index == 0 && cycle.endDate == null;
+                              final isCurrent =
+                                  index == 0 && cycle.endDate == null;
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           cycle.endDate != null
@@ -476,7 +514,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          isCurrent ? 'Active Cycle' : 'Flow: ${cycle.flowIntensity}',
+                                          isCurrent
+                                              ? 'Active Cycle'
+                                              : 'Flow: ${cycle.flowIntensity}',
                                           style: const TextStyle(
                                             fontSize: 12,
                                             color: Color(0xFF8E8E8E),
@@ -485,9 +525,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ],
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: isCurrent ? const Color(0xFFFCF0F0) : const Color(0xFFF2ECEC),
+                                        color: isCurrent
+                                            ? const Color(0xFFFCF0F0)
+                                            : const Color(0xFFF2ECEC),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
@@ -497,7 +542,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
-                                          color: isCurrent ? const Color(0xFF9E385A) : const Color(0xFF6E6E6E),
+                                          color: isCurrent
+                                              ? const Color(0xFF9E385A)
+                                              : const Color(0xFF6E6E6E),
                                         ),
                                       ),
                                     ),
@@ -511,7 +558,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Center(
                             child: Text(
                               'No cycle history found.',
-                              style: TextStyle(fontSize: 13, color: Color(0xFF8E8E8E)),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8E8E8E),
+                              ),
                             ),
                           ),
                         ],
